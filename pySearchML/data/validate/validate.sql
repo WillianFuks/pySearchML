@@ -38,7 +38,7 @@ WITH search_data AS(
           SELECT AS STRUCT
             page.pagepath AS query,
             ARRAY_AGG(productSKU IGNORE NULLS) AS query_skus,
-          FROM UNNEST(hits) LEFT JOIN UNNEST(product) 
+          FROM UNNEST(hits) LEFT JOIN UNNEST(product)
           WHERE productSKU != '(not set)'
             AND NOT REGEXP_CONTAINS(page.pagepath, r'\.html')
           GROUP BY query
