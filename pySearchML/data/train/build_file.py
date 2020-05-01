@@ -2,13 +2,11 @@ import argparse
 import os
 import json
 import glob
-import random
 import gzip
 import sys
 # import subprocess
 import requests
 from urllib.parse import urljoin
-from collections import defaultdict
 import numpy as np
 from typing import List, NamedTuple, Dict, io, Any, Iterator, Tuple
 from elasticsearch import Elasticsearch
@@ -213,53 +211,45 @@ def compute_judgments(model_name: str) -> None:
       model_name: str
           Name of model that specifies experiment of Kubeflow.
     """
-    # filename = f'/tmp/pysearchml/{model_name}/judgments/params.gz'
-    # params = json.loads(gzip.GzipFile(filename).read())
-    judge_params = defaultdict(
-            lambda: defaultdict(lambda: defaultdict(lambda: random.random() / 10))
-    )
+    filename = f'/tmp/pysearchml/{model_name}/data/clickmodel/model.gz'
+    new_filename = f'/tmp/pysearchml/{model_name}/data/judgments/judgments.gz'
 
-    filenames = glob.glob(f'/tmp/pysearchml/{model_name}/data/train/clickstream/*.gz')
+    judge_params = json.loads(gzip.GzipFile(filename).read())
+    os.makedirs(os.path.dirname(new_filename))
 
-    for file_ in filenames:
-        new_file_ = f'/tmp/pysearchml/{model_name}/data/train/judgments/{file_}'
+    with gzip.GzipFile(new_filename, 'wb') as f:
+        for query in judge_params:
+            result = []
 
-        with gzip.GzipFile(new_file_, 'wb') as f:
-            for row in gzip.GzipFile(file_):
-                result = []
+            judgments = {
+                doc: pars['alpha'] * pars['sigma'] for doc, pars in
+                judge_params[query].items()
+            }
 
-                row = json.loads(row)
+            judgments_list = [judge for doc, judge in judgments.items()]
 
-                search_keys_str = '-'.join(
-                    [str(e) for e in sorted(row['search_keys'].values())]
-                )
+            # It means all judgments expectations are equal which is not desirable
+            if judgments_list[0] == judgments_list[-1]:
+                continue
 
-                params = judge_params[search_keys_str]
-                judgments = {
-                    sku: pars['alpha'] * pars['sigma'] for sku, pars in params.items()
+            # We devire judgments based on percentiles from 20% up to 100%
+            percentiles = np.percentile(judgments_list, [20, 40, 60, 80, 100])
+
+            judgment_keys = [
+                {
+                    'doc': doc,
+                    'judgment': process_judgment(percentiles, judgment)
                 }
-
-                judgments_list = [j for sku, j in judgments.items()]
-
-                # It means all judgments expectations are equal which is not desirable
-                if judgments_list[0] == judgments_list[-1]:
-                    continue
-
-                judgment_keys = [
-                    {
-                        'doc': doc,
-                        'judgment': process_judgment(judgments_list, judgment)
-                    }
-                    for doc, judgment in judgments.items()
-                ]
-                result = {
-                    'search_keys': row['search_keys'],
-                    'judgment_keys': judgment_keys
-                }
-                f.write(json.dumps(result).encode() + '\n'.encode())
+                for doc, judgment in judgments.items()
+            ]
+            result = {
+                'search_keys': query,
+                'judgment_keys': judgment_keys
+            }
+            f.write(json.dumps(result).encode() + '\n'.encode())
 
 
-def process_judgment(judgments_list: list, judgment: float) -> int:
+def process_judgment(percentiles: list, judgment: float) -> int:
     """
     Returns which quantile the current value of `judgment` belongs to. The result is
     already transformed to range between integers 0 and 4 inclusive.
@@ -277,16 +267,15 @@ def process_judgment(judgments_list: list, judgment: float) -> int:
           Integer belonging to 0 and 4, inclusive. 0 means the current document is not
           appropriate for current query whereas 4 means it's a perfect fit.
     """
-    quantile = np.quantile(judgments_list, judgment)
-    if quantile <= 0.2:
+    if judgment <= percentiles[0]:
         return 0
-    if quantile <= 0.4:
+    if judgment <= percentiles[1]:
         return 1
-    if quantile <= 0.6:
+    if judgment <= percentiles[2]:
         return 2
-    if quantile <= 0.8:
+    if judgment <= percentiles[3]:
         return 3
-    if quantile <= 1:
+    if judgment <= percentiles[4]:
         return 4
 
 
@@ -312,7 +301,7 @@ def build_file(
           Python Elasticsearch client
     """
     counter = 1
-
+    # works as a pointer
     queries_counter = [0]
     search_arr, judge_list = [], []
 
@@ -325,6 +314,13 @@ def build_file(
         if counter % es_batch == 0:
             write_features(model_name, search_arr, judge_list, queries_counter,
                            es_client)
+            search_arr, judge_list = [], []
+
+        counter += 1
+
+    if search_arr:
+        write_features(model_name, search_arr, judge_list, queries_counter,
+                       es_client)
 
 
 def write_features(
@@ -358,9 +354,10 @@ def write_features(
 
     multi_request = os.linesep.join(search_arr)
     features_log = es_client.msearch(body=multi_request, request_timeout=60)
+
     rows = []
     for i in range(len(judge_list)):
-        es_result = features_log['response'][i].get('hits', {}).get('hits')
+        es_result = features_log['responses'][i].get('hits', {}).get('hits')
 
         if not es_result or len(es_result) == 1:
             continue
@@ -368,7 +365,7 @@ def write_features(
         for j in range(len(es_result)):
             logs = es_result[j]['fields']['_ltrlog'][0]['main']
             features = [
-                f'{idx+1}:logs[idx].get("value", 0)' for idx in range(len(logs))
+                f'{idx+1}:{logs[idx].get("value", 0)}' for idx in range(len(logs))
             ]
             features = '\t'.join(features)
             ranklib_entry = f'{judge_list[i][j]}\tqid:{queries_counter[0]}\t{features}'
@@ -376,7 +373,8 @@ def write_features(
         queries_counter[0] += 1
 
     if rows:
-        path = f'/tmp/pysearchml/{model_name}/data/train/ranklib_input.txt'
+        path = f'/tmp/pysearchml/{model_name}/data/train/ranklib_train.txt'
+        os.makedirs(os.path.dirname(path), exist_ok=True)
         with open(path, 'a') as f:
             f.write(os.linesep.join(rows) + os.linesep)
 
@@ -452,7 +450,7 @@ def read_judgment_files(
     """
     Reads resulting files of the judgments updating process.
     """
-    files = glob.glob(f'/tmp/pysearchml/{model_name}/data/train/judgments/*.gz')
+    files = glob.glob(f'/tmp/pysearchml/{model_name}/data/judgments/*.gz')
     for file_ in files:
         for row in gzip.GzipFile(file_):
             row = json.loads(row)
@@ -485,8 +483,8 @@ def write_ranklib_file(args: List, es_client: Elasticsearch) -> None:
           Python Elasticsearch client
     """
     create_feature_set(args.es_host, args.model_name)
-    compute_judgments(model_name)
-    build_file(model_name, args.index, args.es_batch, es_client)
+    compute_judgments(args.model_name)
+    build_file(args.model_name, args.index, args.es_batch, es_client)
 
 
 if __name__ == '__main__':
