@@ -8,7 +8,7 @@ import sys
 import requests
 from urllib.parse import urljoin
 import numpy as np
-from typing import List, NamedTuple, Dict, io, Any, Iterator, Tuple
+from typing import List, NamedTuple, Dict, Any, Iterator, Tuple
 from elasticsearch import Elasticsearch
 
 
@@ -88,20 +88,6 @@ def parse_args(args: List) -> NamedTuple:
         help='Determines how many items to send at once to Elasticsearch when using '
              'multisearch API.'
     )
-
-
-def get_file_obj(model_name: str) -> io.TextIO:
-    """
-    Creates a text file buffer ready for writing.
-
-    Args
-    ----
-      model_name: str
-          Specifices the name of the experiment running on Kubeflow.
-    """
-    filename = f'/tmp/pysearchml/{model_name}/data/train/ranklib_input.txt'
-    fileobj = open(filename, 'w')
-    return fileobj
 
 
 def create_feature_store(es_host: str, restart_ranklib: bool = False) -> None:

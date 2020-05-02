@@ -72,7 +72,7 @@ SELECT
     COALESCE(channel_group, '') AS channel_group,
     COALESCE(CAST(avg_ticket AS INT64), 0) AS customer_avg_ticket
   ) AS search_keys,
-  ARRAY_AGG(STRUCT(ARRAY(SELECT sku FROM UNNEST(skus) WHERE purchase_flag) AS purchased_skus)) AS skus
+  ARRAY_AGG(STRUCT(ARRAY(SELECT sku FROM UNNEST(skus) WHERE purchase_flag) AS purchased)) AS docs
 FROM search_data LEFT JOIN customer_data USING(fv), UNNEST(hits)
 WHERE ARRAY_LENGTH(ARRAY(SELECT sku FROM UNNEST(skus) WHERE purchase_flag)) > 0
 GROUP BY query, channel_group, avg_ticket
