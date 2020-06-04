@@ -1,0 +1,18 @@
+name: Prepare Environment
+description: Runs queries against GA and export result to an Elasticsearch cluster index
+inputs:
+  - {name: force_restart, type: String, description: 'If `true` then deletes index and build it again.'}
+  - {name: es_host, type: String, description: 'Host where Elasticsearch is located.'}
+  - {name: bucket, type: String}
+
+#outputs:
+  #- {name: train_data, type: LocalPath, description: 'Path where the final LTR training file is stored'}
+implementation:
+  container:
+    image: gcr.io/{project_id}/prepare_env
+    command: ['python', '/run.py']
+    args: [
+      --force_restart, {inputValue: force_restart},
+      --es_host, {inputValue: es_host},
+      --bucket, {inputValue: bucket},
+    ]
