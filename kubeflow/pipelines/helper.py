@@ -27,7 +27,6 @@ def deploy_pipeline(ranker, host, version):
     name = f'pysearchml_{ranker}_{version}'
     # Supposed page_token is not necessary for this application
     pipeline = get_pipe_by_name(client, name)
-    print('PIPELINEEEEEEEEEEEE ', pipeline)
     if not pipeline:
         pipeline = client.upload_pipeline(
             pipeline_package_path=f'{ranker}_pipeline.tar.gz',
@@ -42,13 +41,12 @@ def run_experiment(ranker, host, version, experiment_name):
     run_id = f'experiment_{datetime.now().strftime("%Y%m%d-%H%M%S")}'
     experiment = client.create_experiment(name=experiment_name)
     params = json.loads(open('params.json').read())
-    client.run_pipeline(experiment.id, job_name=run_id, params=params)
+    client.run_pipeline(experiment.id, job_name=run_id, params=params,
+                        pipeline_id=pipeline.id)
 
 
 def main(action, host, ranker='lambdamart', **kwargs):
     """`ranker` is one of the algorithms available in RankLib."""
-    print('HOOOOOOOOOOOOOOOOOOOOOST: ', host)
-
     if action == 'deploy-pipeline':
         version = kwargs.get('version')
         deploy_pipeline(ranker, host, version)

@@ -11,7 +11,7 @@ if [ $CLUSTER_EXISTS = false ]; then
     gcloud container clusters create $CLUSTER_NAME \
 	--enable-autoupgrade \
 	--scopes cloud-platform \
-	--machine-type n1-standard-1 \
+	--machine-type n1-standard-2 \
 	--zone=$COMPUTE_ZONE
 
     gcloud components install kubectl
