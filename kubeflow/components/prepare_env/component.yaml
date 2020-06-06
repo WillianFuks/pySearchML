@@ -9,7 +9,7 @@ inputs:
   #- {name: train_data, type: LocalPath, description: 'Path where the final LTR training file is stored'}
 implementation:
   container:
-    image: gcr.io/{project_id}/prepare_env
+    image: gcr.io/{PROJECT_ID}/prepare_env
     command: ['python', '/run.py']
     args: [
       --force_restart, {inputValue: force_restart},

@@ -91,6 +91,5 @@ if __name__ == '__main__':
         type=str
     )
 
-
     args, _ = parser.parse_known_args(sys.argv[1:])
     upload_data(args.bucket, args.es_host, args.force_restart)
