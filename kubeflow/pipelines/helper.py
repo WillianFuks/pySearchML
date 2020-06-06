@@ -14,7 +14,9 @@ def update_op_project_id_img(op):
     return op
 
 
-def deploy_pipeline(ranker, version=None):
+def deploy_pipeline(ranker, host, version=None):
+    client = kfp.Client(host=host)
+
     name = f'pysearchml_{ranker}{"_" + version if version else ""}'
 
     pipeline = client.upload_pipeline(
@@ -36,10 +38,9 @@ def main(action, host, ranker='lambdamart', **kwargs):
     """`ranker` is one of the algorithms available in RankLib."""
     print('HOOOOOOOOOOOOOOOOOOOOOST: ', host)
 
-    client = kfp.Client(host=host)
     if action == 'deploy-pipeline':
         version = kwargs.get('version')
-        deploy_pipeline(ranker, version)
+        deploy_pipeline(ranker, host, version)
     elif action == 'run-pipeline':
         experiment_name = kwargs['experiment_name']
         run_experiment(experiment_name)
