@@ -1,0 +1,148 @@
+steps:
+
+
+# Transfer secret key from GCP to Cloud Build environemnt
+- name: gcr.io/cloud-builders/gcloud
+  entrypoint: 'bash'
+  args: ['-c', 'gcloud secrets versions access latest --secret=pysearchml-git-secret > /root/.ssh/id_github']
+  volumes:
+  - name: 'ssh'
+    path: /root/.ssh
+  id: 'Get Private Git Key'
+
+
+# Update known_hosts
+- name: 'gcr.io/cloud-builders/git'
+  entrypoint: 'bash'
+  args:
+  - '-c'
+  - |
+    chmod 600 /root/.ssh/id_github
+    ssh-keyscan -t rsa github.com >> /root/.ssh/known_hosts
+    cat <<EOF >/root/.ssh/config
+    Hostname github.com
+    IdentityFile /root/.ssh/id_github
+    EOF
+  volumes:
+  - name: 'ssh'
+    path: /root/.ssh
+  id: 'Prepare Git known_hosts'
+
+
+# Clones Repository
+- name: 'gcr.io/cloud-builders/git'
+  entrypoint: 'bash'
+  args:
+  - '-c'
+  - |
+    git clone git@github.com:WillianFuks/pySearchML.git
+    cd pySearchML
+    git checkout prepare_k8
+  volumes:
+  - name: 'ssh'
+    path: /root/.ssh
+  id: 'Clone Git Repo'
+
+
+# Build prepare_env Docker Image
+- name: 'gcr.io/cloud-builders/docker'
+  args: ['build',
+    '-t',
+    'gcr.io/$PROJECT_ID/prepare_env',
+    '.'
+  ]
+  dir: 'pySearchML/kubeflow/components/prepare_env'
+  id: 'Prepare Env'
+
+
+# Compile Ranker Pipeline
+- name: 'python:3.7.7-slim'
+  entrypoint: 'bash'
+  args:
+    - '-c'
+    - |
+      pip3 install kfp --upgrade
+      pip3 install fire
+      dsl-compile --py ${_RANKER}_pipeline.py --output ${_RANKER}_pipeline.tar.gz
+  dir: 'pySearchML/kubeflow/pipelines'
+  env:
+    - 'PROJECT_ID=$PROJECT_ID'
+  id:  'Compile Pipeline'
+
+
+# Upload Pipeline tar.gz to GCS
+#- name: 'gcr.io/cloud-builders/gsutil'
+  #args: ['cp', '${_RANKER}_pipeline.tar.gz', 'gs://${_BUCKET_NAME}/${_RANKER}_pipeline/']
+  #dir: 'pySearchML/kubeflow/pipelines'
+#  id:   'Upload Ranker Pipeline to GCS'
+
+
+# Build KFP Cluster
+- name: 'gcr.io/cloud-builders/gcloud'
+  entrypoint: 'bash'
+  args:
+    - '-c'
+    - |
+      ./bin/create_k8s.sh
+  dir: 'pySearchML'
+  env:
+    - 'PROJECT_ID=$PROJECT_ID'
+    - 'CLUSTER_NAME=${_CLUSTER_NAME}'
+    - 'COMPUTE_ZONE=${_COMPUTE_ZONE}'
+  id: 'Build KFP Cluster'
+
+
+# Get Host After Cluster Is Created
+- name: 'gcr.io/cloud-builders/gcloud'
+  entrypoint: 'bash'
+  args:
+    - '-c'
+    - |
+      gcloud components install kubectl
+      gcloud container clusters get-credentials ${_CLUSTER_NAME}
+      ./pySearchML/bin/get_pipe_host.sh
+      echo AAAAAAAAAAAAAAAAAAAND $(cat k8_host.txt)
+  id: 'Get Host'
+  waitFor: ['Build KFP Cluster']
+
+
+# Deploy Ranker Pipeline in KFP
+- name: 'python:3.7.7-slim'
+  entrypoint: 'bash'
+  args:
+    - '-c'
+    - |
+      apt-get update && apt-get install curl -y
+      curl https://dl.google.com/dl/cloudsdk/release/google-cloud-sdk.tar.gz > /tmp/google-cloud-sdk.tar.gz
+      mkdir -p /usr/local/gcloud
+      tar -C /usr/local/gcloud -xf /tmp/google-cloud-sdk.tar.gz
+      /usr/local/gcloud/google-cloud-sdk/install.sh
+      export PATH=$$PATH:/usr/local/gcloud/google-cloud-sdk/bin
+      pip3 install kfp --upgrade
+      pip3 install fire
+      python helper.py deploy-pipeline --host=$(cat /workspace/k8_host.txt) --ranker=${_RANKER} --version=${_VERSION}
+  dir: 'pySearchML/kubeflow/pipelines/'
+  env:
+  - 'CLOUDSDK_COMPUTE_ZONE=${_COMPUTE_ZONE}'
+  - 'CLOUDSDK_CONTAINER_CLUSTER=${_CLUSTER_NAME}'
+  id:  'Deploy Pipeline'
+  waitFor: ['Compile Pipeline', 'Build KFP Cluster', 'Get Host']
+
+
+# Deploys Elasticsearch to Cluster
+- name: 'gcr.io/cloud-builders/gcloud'
+  entrypoint: 'bash'
+  args:
+    - '-c'
+    - |
+      gcloud components install kubectl
+      gcloud container clusters get-credentials ${_CLUSTER_NAME}
+      ./bin/deploy_es.sh
+  dir: 'pySearchML'
+  env:
+  id: 'Install ES'
+  waitFor: ['Build KFP Cluster']
+
+
+images:
+- 'gcr.io/$PROJECT_ID/prepare_env'
