@@ -21,10 +21,11 @@ def deploy_pipeline(ranker, version=None):
     name = f'pysearchml_{ranker}{"_" + version if version else ""}'
 
     pipeline = client.upload_pipeline(
-        pipeline_package_path=f'kubeflow/pipelines/{ranker}_pipeline.tar.gz',
+        pipeline_package_path=f'{ranker}_pipeline.tar.gz',
         pipeline_name=name
     )
     pipeline_id = pipeline.id
+    print('THIS IS PIPELINE ID: ', pipeline_id)
 
 
 def run_experiment(experiment_name):
@@ -37,10 +38,10 @@ def run_experiment(experiment_name):
 def main(action, ranker='lambdamart', **kwargs):
     """`ranker` is one of the algorithms available in RankLib."""
     if action == 'deploy-pipeline':
-        version = args.get('version')
-        deploy_pipeline(version, experiment_name)
+        version = kwargs.get('version')
+        deploy_pipeline(ranker, version)
     elif action == 'run-pipeline':
-        experiment_name = args['experiment_name']
+        experiment_name = kwargs['experiment_name']
         run_experiment(experiment_name)
     else:
         raise ValueError(f'Invalid operation name: {function}.')
