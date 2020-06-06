@@ -48,4 +48,5 @@ def main(action, ranker='lambdamart', **kwargs):
 
 
 if __name__ == '__main__':
+    print('HIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIII')
     fire.Fire(main)
