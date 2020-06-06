@@ -14,24 +14,35 @@ def update_op_project_id_img(op):
     return op
 
 
-def deploy_pipeline(ranker, host, version=None):
+def get_pipe_by_name(client, name):
+    pipes = client.list_pipelines()
+    pipeline = [pipe for pipe in pipes.pipelines if pipe.name == name]
+    if pipeline:
+        pipeline = pipeline[0]
+    return pipeline
+
+
+def deploy_pipeline(ranker, host, version):
     client = kfp.Client(host=host)
+    name = f'pysearchml_{ranker}_{version}'
+    # Supposed page_token is not necessary for this application
+    pipeline = get_pipe_by_name(client, name)
+    print('PIPELINEEEEEEEEEEEE ', pipeline)
+    if not pipeline:
+        pipeline = client.upload_pipeline(
+            pipeline_package_path=f'{ranker}_pipeline.tar.gz',
+            pipeline_name=name
+        )
 
-    name = f'pysearchml_{ranker}{"_" + version if version else ""}'
 
-    pipeline = client.upload_pipeline(
-        pipeline_package_path=f'{ranker}_pipeline.tar.gz',
-        pipeline_name=name
-    )
-    pipeline_id = pipeline.id
-    print('THIS IS PIPELINE ID: ', pipeline_id)
-
-
-def run_experiment(experiment_name):
+def run_experiment(ranker, host, version, experiment_name):
+    client = kfp.Client(host=host)
+    name = f'pysearchml_{ranker}_{version}'
+    pipeline = get_pipe_by_name(client, name)
     run_id = f'experiment_{datetime.now().strftime("%Y%m%d-%H%M%S")}'
     experiment = client.create_experiment(name=experiment_name)
     params = json.loads(open('params.json').read())
-    client.run_pipeline(experiment.id, job_name=run_id, params=settings)
+    client.run_pipeline(experiment.id, job_name=run_id, params=params)
 
 
 def main(action, host, ranker='lambdamart', **kwargs):
