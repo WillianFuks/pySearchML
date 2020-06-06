@@ -130,3 +130,6 @@ dmypy.json
 
 # json key files
 key.json
+
+# KFP pipelines
+*.tar.gz

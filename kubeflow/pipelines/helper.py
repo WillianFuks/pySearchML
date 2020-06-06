@@ -4,9 +4,6 @@ import fire
 from datetime import datetime
 
 
-client = kfp.Client()
-
-
 def update_op_project_id_img(op):
     project_id = os.getenv('PROJECT_ID')
     if not project_id:
@@ -35,8 +32,11 @@ def run_experiment(experiment_name):
     client.run_pipeline(experiment.id, job_name=run_id, params=settings)
 
 
-def main(action, ranker='lambdamart', **kwargs):
+def main(action, host, ranker='lambdamart', **kwargs):
     """`ranker` is one of the algorithms available in RankLib."""
+    print('HOOOOOOOOOOOOOOOOOOOOOST: ', host)
+
+    client = kfp.Client(host=host)
     if action == 'deploy-pipeline':
         version = kwargs.get('version')
         deploy_pipeline(ranker, version)
@@ -48,5 +48,4 @@ def main(action, ranker='lambdamart', **kwargs):
 
 
 if __name__ == '__main__':
-    print('HIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIII')
     fire.Fire(main)
