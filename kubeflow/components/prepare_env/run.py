@@ -14,8 +14,8 @@ def upload_data(bucket, es_host, force_restart: bool=False):
 
     es = Elasticsearch(hosts=[es_host])
     path = pathlib.Path(__file__)
-    path = path.parent.parent.parent.parent / 'pySearchML' / 'es' / 'mapping.json'
-    schema = json.loads(open(str(path)).read())
+    mapping_path = path.parent.parent.parent.parent / 'pySearchML' / 'es' / 'mapping.json'
+    schema = json.loads(open(str(mapping_path)).read())
     index = schema.pop('index')
 
     def read_file(bucket):
@@ -31,7 +31,12 @@ def upload_data(bucket, es_host, force_restart: bool=False):
             bucket_obj.create()
 
         # Query GA data
-        query = open('pySearchML/utils/extract_ga_data.sql').read()
+        query_path = (
+            path.parent.parent.parent.parent / 'pySearchML' / 'utils' /
+            'extract_ga_data.sql'
+        )
+        query = open(str(query_path)).read()
+        print('this is query: ', query)
         job_config = bigquery.QueryJobConfig()
         job_config.destination = f'{bq_client.project}.pysearchml.tmp'
         job_config.maximum_bytes_billed = 10 * (1024 ** 3)
