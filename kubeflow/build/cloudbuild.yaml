@@ -48,10 +48,12 @@ steps:
 - name: 'gcr.io/cloud-builders/docker'
   args: ['build',
     '-t',
-    'gcr.io/$PROJECT_ID/prepare_env',
+    'gcr.io/$PROJECT_ID/pySearchML',
+    '-f',
+    'kubernetes/Dockerfile',
     '.'
   ]
-  dir: 'pySearchML/kubeflow/components/prepare_env'
+  dir: 'pySearchML'
   id: 'Prepare Env'
 
 

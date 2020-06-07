@@ -10,7 +10,7 @@ inputs:
 implementation:
   container:
     image: gcr.io/{PROJECT_ID}/prepare_env
-    command: ['python', '/run.py']
+    command: ['python', '/pySearchML/kubeflow/components/prepare_env/run.py']
     args: [
       --force_restart, {inputValue: force_restart},
       --es_host, {inputValue: es_host},

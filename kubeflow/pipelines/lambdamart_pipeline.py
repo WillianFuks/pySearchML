@@ -16,8 +16,8 @@ PATH = pathlib.Path(__file__)
                  'Lambda Mart Algorithm from RankLib')
 )
 def build_lambdamart_pipeline(
-    bucket,
-    es_host,
+    bucket='pysearchml',
+    es_host='elasticsearch.elastic-system.svc.cluster.local',
     force_restart='false'
 ):
     component = PATH.parent.parent / 'components' / 'prepare_env' / 'component.yaml'
