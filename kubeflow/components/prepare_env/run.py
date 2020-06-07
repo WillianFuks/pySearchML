@@ -1,5 +1,6 @@
 import sys
 import argparse
+import pathlib
 import gzip
 
 from google.cloud import storage, bigquery
@@ -12,7 +13,9 @@ def upload_data(bucket, es_host, force_restart: bool=False):
 
 
     es = Elasticsearch(hosts=[es_host])
-    schema = json.loads(open('pySearchML/es/mapping.json').read())
+    path = pathlib.Path(__file__)
+    path = path.parent.parent.parent.parent / 'pySearchML' / 'es' / 'mapping.json'
+    schema = json.loads(open(str(path)).read())
     index = schema.pop('index')
 
     def read_file(bucket):

@@ -48,7 +48,7 @@ steps:
 - name: 'gcr.io/cloud-builders/docker'
   args: ['build',
     '-t',
-    'gcr.io/$PROJECT_ID/pySearchML',
+    'gcr.io/$PROJECT_ID/pysearchml',
     '-f',
     'kubernetes/Dockerfile',
     '.'
@@ -147,4 +147,4 @@ steps:
 
 
 images:
-- 'gcr.io/$PROJECT_ID/prepare_env'
+- 'gcr.io/$PROJECT_ID/pysearchml'
