@@ -23,8 +23,7 @@ def upload_data(bucket, es_host, force_restart: bool=False):
         bq_client = bigquery.Client()
 
         ds_ref = bq_client.dataset('pysearchml')
-        ds = bq_client.get_dataset(ds_ref)
-        bq_client.create_dataset(ds, exists_ok=True)
+        bq_client.create_dataset(ds_ref, exists_ok=True)
 
         bucket_obj = storage_client.bucket(bucket)
         if not bucket_obj.exists():
