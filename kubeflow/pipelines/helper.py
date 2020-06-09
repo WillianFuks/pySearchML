@@ -15,8 +15,13 @@ def update_op_project_id_img(op):
 
 
 def get_pipe_by_name(client, name):
-    pipes = client.list_pipelines()
-    pipeline = [pipe for pipe in pipes.pipelines if pipe.name == name]
+    # Tries to read pipeline. If fails, assumes pipe doesnt exist.
+    try:
+        pipes = client.list_pipelines()
+        pipeline = [pipe for pipe in pipes.pipelines if pipe.name == name]
+    except:
+        pipeline = None
+
     if pipeline:
         pipeline = pipeline[0]
     return pipeline
@@ -26,6 +31,7 @@ def deploy_pipeline(ranker, host, version):
     client = kfp.Client(host=host)
     name = f'pysearchml_{ranker}_{version}'
     # Supposed page_token is not necessary for this application
+
     pipeline = get_pipe_by_name(client, name)
     if not pipeline:
         pipeline = client.upload_pipeline(
@@ -38,6 +44,8 @@ def run_experiment(ranker, host, version, experiment_name):
     client = kfp.Client(host=host)
     name = f'pysearchml_{ranker}_{version}'
     pipeline = get_pipe_by_name(client, name)
+    if not pipeline:
+        raise Exception('Please first create a pipeline before running')
     run_id = f'experiment_{datetime.now().strftime("%Y%m%d-%H%M%S")}'
     experiment = client.create_experiment(name=experiment_name)
     params = json.loads(open('params.json').read())
