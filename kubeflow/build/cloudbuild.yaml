@@ -139,8 +139,8 @@ steps:
       python helper.py deploy-pipeline --host=$(cat /workspace/k8_host.txt) --ranker=${_RANKER} --version=${_VERSION}
   dir: 'pySearchML/kubeflow/pipelines/'
   env:
-  - 'CLOUDSDK_COMPUTE_ZONE=${_COMPUTE_ZONE}'
-  - 'CLOUDSDK_CONTAINER_CLUSTER=${_CLUSTER_NAME}'
+    - 'CLOUDSDK_COMPUTE_ZONE=${_COMPUTE_ZONE}'
+    - 'CLOUDSDK_CONTAINER_CLUSTER=${_CLUSTER_NAME}'
   id:  'Deploy Pipeline'
   waitFor: ['Compile Pipeline', 'Build KFP Cluster', 'Get Host']
 

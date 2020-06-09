@@ -20,11 +20,6 @@ def upload_data(bucket, es_host, force_restart: bool=False):
 
     def read_file(bucket):
         storage_client = storage.Client()
-        print('email is: ', storage_client.get_service_account_email())
-        print('scope is: ', storage_client.SCOPE)
-        import os
-        for key, v in os.environ.items():
-            print(key, v)
         bq_client = bigquery.Client()
 
         ds_ref = bq_client.dataset('pysearchml')

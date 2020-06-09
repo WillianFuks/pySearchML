@@ -15,7 +15,7 @@ else
     if [ -z "$SERVICE_ACCOUNT" ]; then
 	gcloud iam service-accounts create $NAME --project $PROJECT_ID \
 	    --display-name $NAME
-	for ROLE in roles/editor roles/storage.admin roles/bigquery.admin;
+	for ROLE in roles/editor roles/storage.admin roles/bigquery.admin roles/storage.objectAdmin;
 	do
 	    gcloud projects add-iam-policy-binding $PROJECT_ID \
 		    --member=serviceAccount:$NAME@$PROJECT_ID.iam.gserviceaccount.com \
