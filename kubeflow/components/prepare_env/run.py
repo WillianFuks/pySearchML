@@ -21,7 +21,7 @@ def upload_data(bucket, es_host, force_restart: bool=False):
     index = schema.pop('index')
 
     def read_file(bucket):
-        storage_client = storage.Client()
+        storage_client = storage.Client.from_service_account_json('./key.json')
         cre = storage_client._credentials
         print('this is expired: ', cre.expired)
         print('this is expiry: ', cre.expiry)
@@ -34,6 +34,17 @@ def upload_data(bucket, es_host, force_restart: bool=False):
 
 
         bq_client = bigquery.Client()
+        cre = bq_client._credentials
+        print('this is expired: ', cre.expired)
+        print('this is expiry: ', cre.expiry)
+        print('this is project id: ', cre.project_id)
+        print('this is scopes: ', cre.scopes)
+        print('this is email: ', cre.service_account_email)
+        print('this is signer email: ', cre.signer_email)
+        print('this is token: ', cre.token)
+        print('this is valid: ', cre.valid)
+
+
 
         ds_ref = bq_client.dataset('pysearchml')
         bq_client.create_dataset(ds_ref, exists_ok=True)
