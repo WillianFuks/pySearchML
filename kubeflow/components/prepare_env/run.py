@@ -4,8 +4,6 @@ import pathlib
 import gzip
 
 from google.cloud import storage, bigquery
-from google.auth import compute_engine
-
 
 
 def upload_data(bucket, es_host, force_restart: bool=False):
@@ -23,29 +21,30 @@ def upload_data(bucket, es_host, force_restart: bool=False):
     index = schema.pop('index')
 
     def read_file(bucket):
-        credentials = compute_engine.Credentials()
-        storage_client = storage.Client(credentials=credentials, project='pysearchml')
-#         cre = storage_client._credentials
-        # print('this is expired: ', cre.expired)
-        # print('this is expiry: ', cre.expiry)
-        # print('this is project id: ', cre.project_id)
-        # print('this is scopes: ', cre.scopes)
-        # print('this is email: ', cre.service_account_email)
-        # print('this is signer email: ', cre.signer_email)
-        # print('this is token: ', cre.token)
-        # print('this is valid: ', cre.valid)
+
+        storage_client = storage.Client.from_service_account_json('./key.json')
+        cre = storage_client._credentials
+        print('type: ', type(cre))
+        print('this is expired: ', cre.expired)
+        print('this is expiry: ', cre.expiry)
+        print('this is project id: ', cre.project_id)
+        print('this is scopes: ', cre.scopes)
+        print('this is email: ', cre.service_account_email)
+        print('this is signer email: ', cre.signer_email)
+        print('this is token: ', cre.token)
+        print('this is valid: ', cre.valid)
 
 
         bq_client = bigquery.Client()
-  #       cre = bq_client._credentials
-        # print('this is expired: ', cre.expired)
-        # print('this is expiry: ', cre.expiry)
-        # print('this is project id: ', cre.project_id)
-        # print('this is scopes: ', cre.scopes)
-        # print('this is email: ', cre.service_account_email)
-        # print('this is signer email: ', cre.signer_email)
-        # print('this is token: ', cre.token)
-  #       print('this is valid: ', cre.valid)
+        cre = bq_client._credentials
+        print('this is expired: ', cre.expired)
+        print('this is expiry: ', cre.expiry)
+        print('this is project id: ', cre.project_id)
+        print('this is scopes: ', cre.scopes)
+        print('this is email: ', cre.service_account_email)
+        print('this is signer email: ', cre.signer_email)
+        print('this is token: ', cre.token)
+        print('this is valid: ', cre.valid)
 
 
 
@@ -53,6 +52,8 @@ def upload_data(bucket, es_host, force_restart: bool=False):
         bq_client.create_dataset(ds_ref, exists_ok=True)
 
         print('created bigquery')
+
+        print(requests.get('http://www.google.com').content)
 
         bucket_obj = storage_client.bucket(bucket)
         if not bucket_obj.exists():
