@@ -14,16 +14,31 @@ def upload_data(bucket, es_host, force_restart: bool=False):
 
     es = Elasticsearch(hosts=[es_host])
     path = pathlib.Path(__file__)
-    mapping_path = path.parent.parent.parent.parent / 'pySearchML' / 'es' / 'mapping.json'
+    mapping_path = (
+        path.parent.parent.parent.parent / 'pySearchML' / 'es' / 'mapping.json'
+    )
     schema = json.loads(open(str(mapping_path)).read())
     index = schema.pop('index')
 
     def read_file(bucket):
         storage_client = storage.Client()
+        cre = storage_client._credentials
+        print('this is expired: ', cre.expired)
+        print('this is expiry: ', cre.expiry)
+        print('this is project id: ', cre.project_id)
+        print('this is scopes: ', cre.scopes)
+        print('this is email: ', cre.service_account_email)
+        print('this is signer email: ', cre.signer_email)
+        print('this is token: ', cre.token)
+        print('this is valid: ', cre.valid)
+
+
         bq_client = bigquery.Client()
 
         ds_ref = bq_client.dataset('pysearchml')
         bq_client.create_dataset(ds_ref, exists_ok=True)
+
+        print('created bigquery')
 
         bucket_obj = storage_client.bucket(bucket)
         if not bucket_obj.exists():

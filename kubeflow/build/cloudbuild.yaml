@@ -40,7 +40,7 @@ steps:
   - '-c'
   - |
     git clone git@github.com:WillianFuks/pySearchML.git
-    cp key.json /pySearchML
+    cp key.json pySearchML/
     cd pySearchML
     git checkout prepare_k8
   volumes:
