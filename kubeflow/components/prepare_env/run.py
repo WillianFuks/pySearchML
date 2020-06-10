@@ -2,6 +2,7 @@ import sys
 import argparse
 import pathlib
 import gzip
+import requests
 
 from google.cloud import storage, bigquery
 
