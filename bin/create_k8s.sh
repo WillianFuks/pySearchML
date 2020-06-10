@@ -17,7 +17,6 @@ if [ $CLUSTER_EXISTS = false ]; then
 	--num-nodes=2
 
     gcloud components install kubectl
-
     gcloud container clusters get-credentials pysearchml --zone=$COMPUTE_ZONE
 
     # Main reference for deploying ES on k8: https://www.digitalocean.com/community/tutorials/how-to-set-up-an-elasticsearch-fluentd-and-kibana-efk-logging-stack-on-kubernetes#step-3-%E2%80%94-creating-the-kibana-deployment-and-service

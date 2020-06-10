@@ -34,6 +34,7 @@ def upload_data(bucket, es_host, force_restart: bool=False):
         print('this is signer email: ', cre.signer_email)
         print('this is token: ', cre.token)
         print('this is valid: ', cre.valid)
+        print('proxy: ', cre._http_internal.proxies)
 
 
         bq_client = bigquery.Client()
@@ -53,7 +54,6 @@ def upload_data(bucket, es_host, force_restart: bool=False):
         bq_client.create_dataset(ds_ref, exists_ok=True)
 
         print('created bigquery')
-
         print(requests.get('http://www.google.com').content)
 
         bucket_obj = storage_client.bucket(bucket)
