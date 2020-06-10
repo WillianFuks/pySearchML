@@ -4,6 +4,8 @@ import pathlib
 import gzip
 
 from google.cloud import storage, bigquery
+from google.auth import compute_engine
+
 
 
 def upload_data(bucket, es_host, force_restart: bool=False):
@@ -21,7 +23,8 @@ def upload_data(bucket, es_host, force_restart: bool=False):
     index = schema.pop('index')
 
     def read_file(bucket):
-        storage_client = storage.Client.from_service_account_json('./key.json')
+        credentials = compute_engine.Credentials()
+        storage_client = storage.Client(credentials=credentials, project='pysearchml')
         cre = storage_client._credentials
         print('this is expired: ', cre.expired)
         print('this is expiry: ', cre.expiry)
