@@ -13,7 +13,7 @@ if [ $CLUSTER_EXISTS = false ]; then
 	--scopes cloud-platform \
 	--machine-type n1-standard-2 \
 	--zone=$COMPUTE_ZONE \
-	--disk-size=8GB
+	--disk-size=10GB
 
     gcloud components install kubectl
 

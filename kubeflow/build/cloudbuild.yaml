@@ -49,17 +49,17 @@ steps:
   id: 'Clone Git Repo'
 
 
-# Creates Service Account pysearchml
-- name: 'gcr.io/cloud-builders/gcloud'
-  entrypoint: 'bash'
-  args:
-    - '-c'
-    - |
-      ./bin/manage_service_account.sh
-  dir: 'pySearchML'
-  env:
-    - 'PROJECT_ID=$PROJECT_ID'
-  id: 'Manage Service Account'
+## Creates Service Account pysearchml
+#- name: 'gcr.io/cloud-builders/gcloud'
+  #entrypoint: 'bash'
+  #args:
+    #- '-c'
+    #- |
+      #./bin/manage_service_account.sh
+  #dir: 'pySearchML'
+  #env:
+    #- 'PROJECT_ID=$PROJECT_ID'
+#  id: 'Manage Service Account'
 
 
 # Build prepare_env Docker Image
@@ -73,7 +73,6 @@ steps:
     ]
   dir: 'pySearchML'
   id: 'Prepare Env'
-  waitFor: ['Manage Service Account']
 
 
 # Compile Ranker Pipeline
