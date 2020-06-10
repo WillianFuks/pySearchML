@@ -25,27 +25,27 @@ def upload_data(bucket, es_host, force_restart: bool=False):
     def read_file(bucket):
         credentials = compute_engine.Credentials()
         storage_client = storage.Client(credentials=credentials, project='pysearchml')
-        cre = storage_client._credentials
-        print('this is expired: ', cre.expired)
-        print('this is expiry: ', cre.expiry)
-        print('this is project id: ', cre.project_id)
-        print('this is scopes: ', cre.scopes)
-        print('this is email: ', cre.service_account_email)
-        print('this is signer email: ', cre.signer_email)
-        print('this is token: ', cre.token)
-        print('this is valid: ', cre.valid)
+#         cre = storage_client._credentials
+        # print('this is expired: ', cre.expired)
+        # print('this is expiry: ', cre.expiry)
+        # print('this is project id: ', cre.project_id)
+        # print('this is scopes: ', cre.scopes)
+        # print('this is email: ', cre.service_account_email)
+        # print('this is signer email: ', cre.signer_email)
+        # print('this is token: ', cre.token)
+        # print('this is valid: ', cre.valid)
 
 
         bq_client = bigquery.Client()
-        cre = bq_client._credentials
-        print('this is expired: ', cre.expired)
-        print('this is expiry: ', cre.expiry)
-        print('this is project id: ', cre.project_id)
-        print('this is scopes: ', cre.scopes)
-        print('this is email: ', cre.service_account_email)
-        print('this is signer email: ', cre.signer_email)
-        print('this is token: ', cre.token)
-        print('this is valid: ', cre.valid)
+  #       cre = bq_client._credentials
+        # print('this is expired: ', cre.expired)
+        # print('this is expiry: ', cre.expiry)
+        # print('this is project id: ', cre.project_id)
+        # print('this is scopes: ', cre.scopes)
+        # print('this is email: ', cre.service_account_email)
+        # print('this is signer email: ', cre.signer_email)
+        # print('this is token: ', cre.token)
+  #       print('this is valid: ', cre.valid)
 
 
 
