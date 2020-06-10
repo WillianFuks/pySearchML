@@ -1,14 +1,18 @@
 steps:
 
 
-# Transfer secret key from GCP to Cloud Build environemnt
+# Transfer secret keys from GCP to Cloud Build environemnt
 - name: gcr.io/cloud-builders/gcloud
   entrypoint: 'bash'
-  args: ['-c', 'gcloud secrets versions access latest --secret=pysearchml-git-secret > /root/.ssh/id_github']
+  args:
+    - '-c'
+    - |
+      gcloud secrets versions access latest --secret=pysearchml-git-secret > /root/.ssh/id_github
+      gcloud secrets versions access latest --secret=pysearchml-service-account > key.json
   volumes:
   - name: 'ssh'
     path: /root/.ssh
-  id: 'Get Private Git Key'
+  id: 'Get Secret Keys'
 
 
 # Update known_hosts
@@ -29,13 +33,14 @@ steps:
   id: 'Prepare Git known_hosts'
 
 
-# Clones Repository
+# Clones Repository And Copies Service Account Key
 - name: 'gcr.io/cloud-builders/git'
   entrypoint: 'bash'
   args:
   - '-c'
   - |
     git clone git@github.com:WillianFuks/pySearchML.git
+    cp key.json /pySearchML
     cd pySearchML
     git checkout prepare_k8
   volumes:

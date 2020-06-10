@@ -1,6 +1,6 @@
-#!/bin/sh
+#!/bin/bash
 
-set -eu
+#set -e
 
 #PROJECT_ID=$(gcloud config get-value project)
 PROJECT_ID=$PROJECT_ID

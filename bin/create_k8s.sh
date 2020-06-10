@@ -12,7 +12,8 @@ if [ $CLUSTER_EXISTS = false ]; then
 	--enable-autoupgrade \
 	--scopes cloud-platform \
 	--machine-type n1-standard-2 \
-	--zone=$COMPUTE_ZONE
+	--zone=$COMPUTE_ZONE \
+	--disk-size=8GB
 
     gcloud components install kubectl
 
