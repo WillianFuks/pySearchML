@@ -4,8 +4,8 @@ HOST=$(kubectl describe configmap inverse-proxy-config -n kubeflow | grep google
 
 # Means Proxy is still being created
 if [ -z "$HOST" ]; then
-    echo 'Sleeping 2 mins so Kubeflow Inverse Proxy is ready'
-    sleep 2m
+    echo 'Sleeping 3 mins so Kubeflow Inverse Proxy is ready'
+    sleep 3m
     HOST=$(kubectl describe configmap inverse-proxy-config -n kubeflow | grep googleusercontent.com)
 fi
 

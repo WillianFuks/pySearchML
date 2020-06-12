@@ -132,7 +132,8 @@ steps:
   args:
     - '-c'
     - |
-      apt-get update && apt-get install curl -y curl https://dl.google.com/dl/cloudsdk/release/google-cloud-sdk.tar.gz > /tmp/google-cloud-sdk.tar.gz
+      apt-get update && apt-get install curl -y
+      curl https://dl.google.com/dl/cloudsdk/release/google-cloud-sdk.tar.gz > /tmp/google-cloud-sdk.tar.gz
       mkdir -p /usr/local/gcloud
       tar -C /usr/local/gcloud -xf /tmp/google-cloud-sdk.tar.gz
       /usr/local/gcloud/google-cloud-sdk/install.sh
@@ -148,20 +149,20 @@ steps:
   waitFor: ['Compile Pipeline', 'Build KFP Cluster', 'Get Host']
 
 
-# Deploys Elasticsearch to Cluster
-- name: 'gcr.io/cloud-builders/gcloud'
-  entrypoint: 'bash'
-  args:
-    - '-c'
-    - |
-      gcloud components install kubectl
-      gcloud container clusters get-credentials ${_CLUSTER_NAME}
-      ./bin/deploy_es.sh
-  dir: 'pySearchML'
-  env:
-  id: 'Install ES'
-  waitFor: ['Build KFP Cluster']
+## Deploys Elasticsearch to Cluster
+#- name: 'gcr.io/cloud-builders/gcloud'
+  #entrypoint: 'bash'
+  #args:
+    #- '-c'
+    #- |
+      #gcloud components install kubectl
+      #gcloud container clusters get-credentials ${_CLUSTER_NAME}
+      #./bin/deploy_es.sh
+  #dir: 'pySearchML'
+  #env:
+  #id: 'Install ES'
+#  waitFor: ['Build KFP Cluster']
 
 
-images:
-- 'gcr.io/$PROJECT_ID/pysearchml'
+#images:
+#- 'gcr.io/$PROJECT_ID/pysearchml'
