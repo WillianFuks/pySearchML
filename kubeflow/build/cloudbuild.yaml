@@ -49,6 +49,21 @@ steps:
   id: 'Clone Git Repo'
 
 
+# Build KFP Cluster
+- name: 'gcr.io/cloud-builders/gcloud'
+  entrypoint: 'bash'
+  args:
+    - '-c'
+    - |
+      ./bin/create_k8s.sh
+  dir: 'pySearchML'
+  env:
+    - 'PROJECT_ID=$PROJECT_ID'
+    - 'CLUSTER_NAME=${_CLUSTER_NAME}'
+    - 'COMPUTE_ZONE=${_COMPUTE_ZONE}'
+  id: 'Build KFP Cluster'
+
+
 # Build pysearchml Docker Image
 #- name: 'gcr.io/cloud-builders/docker'
   #entrypoint: 'bash'
@@ -97,20 +112,6 @@ steps:
 #  id:   'Upload Ranker Pipeline to GCS'
 
 
-# Build KFP Cluster
-- name: 'gcr.io/cloud-builders/gcloud'
-  entrypoint: 'bash'
-  args:
-    - '-c'
-    - |
-      ./bin/create_k8s.sh
-  dir: 'pySearchML'
-  env:
-    - 'PROJECT_ID=$PROJECT_ID'
-    - 'CLUSTER_NAME=${_CLUSTER_NAME}'
-    - 'COMPUTE_ZONE=${_COMPUTE_ZONE}'
-  id: 'Build KFP Cluster'
-
 
 # Get Host After Cluster Is Created
 - name: 'gcr.io/cloud-builders/gcloud'
@@ -126,27 +127,38 @@ steps:
   waitFor: ['Build KFP Cluster']
 
 
-# Deploy Ranker Pipeline in KFP
-- name: 'python:3.7.7-slim'
+- name: 'gcr.io/$PROJECT_ID/pysearchml'
   entrypoint: 'bash'
   args:
     - '-c'
     - |
-      apt-get update && apt-get install curl -y
-      curl https://dl.google.com/dl/cloudsdk/release/google-cloud-sdk.tar.gz > /tmp/google-cloud-sdk.tar.gz
-      mkdir -p /usr/local/gcloud
-      tar -C /usr/local/gcloud -xf /tmp/google-cloud-sdk.tar.gz
-      /usr/local/gcloud/google-cloud-sdk/install.sh
-      export PATH=$$PATH:/usr/local/gcloud/google-cloud-sdk/bin
-      pip3 install kfp --upgrade
-      pip3 install fire
       python helper.py deploy-pipeline --host=$(cat /workspace/k8_host.txt) --ranker=${_RANKER} --version=${_VERSION}
   dir: 'pySearchML/kubeflow/pipelines/'
-  env:
-    - 'CLOUDSDK_COMPUTE_ZONE=${_COMPUTE_ZONE}'
-    - 'CLOUDSDK_CONTAINER_CLUSTER=${_CLUSTER_NAME}'
   id:  'Deploy Pipeline'
   waitFor: ['Compile Pipeline', 'Build KFP Cluster', 'Get Host']
+
+
+# Deploy Ranker Pipeline in KFP
+#- name: 'python:3.7.7-slim'
+  #entrypoint: 'bash'
+  #args:
+    #- '-c'
+    #- |
+      #apt-get update && apt-get install curl -y
+      #curl https://dl.google.com/dl/cloudsdk/release/google-cloud-sdk.tar.gz > /tmp/google-cloud-sdk.tar.gz
+      #mkdir -p /usr/local/gcloud
+      #tar -C /usr/local/gcloud -xf /tmp/google-cloud-sdk.tar.gz
+      #/usr/local/gcloud/google-cloud-sdk/install.sh
+      #export PATH=$$PATH:/usr/local/gcloud/google-cloud-sdk/bin
+      #pip3 install kfp --upgrade
+      #pip3 install fire
+      #python helper.py deploy-pipeline --host=$(cat /workspace/k8_host.txt) --ranker=${_RANKER} --version=${_VERSION}
+  #dir: 'pySearchML/kubeflow/pipelines/'
+  #env:
+    #- 'CLOUDSDK_COMPUTE_ZONE=${_COMPUTE_ZONE}'
+    #- 'CLOUDSDK_CONTAINER_CLUSTER=${_CLUSTER_NAME}'
+  #id:  'Deploy Pipeline'
+#  waitFor: ['Compile Pipeline', 'Build KFP Cluster', 'Get Host']
 
 
 ## Deploys Elasticsearch to Cluster
