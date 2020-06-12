@@ -83,6 +83,7 @@ steps:
     - |
       dsl-compile --py ${_RANKER}_pipeline.py --output ${_RANKER}_pipeline.tar.gz
       echo HAAAAAAAAAAAAAAAAAAAAAAAAHAHAHAHAHAHHAHA
+      echo $(ls -l)
   dir: 'pySearchML/kubeflow/pipelines'
   env:
     - 'PROJECT_ID=$PROJECT_ID'

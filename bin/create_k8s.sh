@@ -13,8 +13,8 @@ if [ $CLUSTER_EXISTS = false ]; then
 	--scopes cloud-platform \
 	--machine-type n1-standard-2 \
 	--zone=$COMPUTE_ZONE \
-	--disk-size=20GB \
-	--num-nodes=2
+	--disk-size=10GB \
+	--num-nodes=1
 
     gcloud components install kubectl
     gcloud container clusters get-credentials pysearchml --zone=$COMPUTE_ZONE
