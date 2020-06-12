@@ -12,3 +12,4 @@ RUN apt-get update && apt-get install curl -y &&\
     ln -s /usr/local/gcloud/google-cloud-sdk/bin/* /usr/bin
 
 RUN pip install -r requirements.txt
+RUN pip install kfp --upgrade

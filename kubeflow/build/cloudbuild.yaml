@@ -50,15 +50,15 @@ steps:
 
 
 # Build pysearchml Docker Image
-- name: 'gcr.io/cloud-builders/docker'
-  entrypoint: 'bash'
-  args:
-    - '-c'
-    - |
-      docker build -t gcr.io/$PROJECT_ID/pysearchml -f kubernetes/Dockerfile .
-      docker push gcr.io/$PROJECT_ID/pysearchml
-  dir: 'pySearchML'
-  id: 'Build Dockerfile'
+#- name: 'gcr.io/cloud-builders/docker'
+  #entrypoint: 'bash'
+  #args:
+    #- '-c'
+    #- |
+      #docker build -t gcr.io/$PROJECT_ID/pysearchml -f kubernetes/Dockerfile .
+      #docker push gcr.io/$PROJECT_ID/pysearchml
+  #dir: 'pySearchML'
+#  id: 'Build Dockerfile'
 
 
 # Compile Ranker Pipeline
