@@ -62,32 +62,32 @@ steps:
 
 
 # Compile Ranker Pipeline
-#- name: 'python:3.7.7-slim'
-  #entrypoint: 'bash'
-  #args:
-    #- '-c'
-    #- |
-      #pip3 install kfp --upgrade
-      #pip3 install fire
-      #dsl-compile --py ${_RANKER}_pipeline.py --output ${_RANKER}_pipeline.tar.gz
-  #dir: 'pySearchML/kubeflow/pipelines'
-  #env:
-    #- 'PROJECT_ID=$PROJECT_ID'
-#  id:  'Compile Pipeline'
-
-
-- name: 'gcr.io/$PROJECT_ID/pysearchml'
+- name: 'python:3.7.7-slim'
   entrypoint: 'bash'
   args:
     - '-c'
     - |
+      pip3 install kfp --upgrade
+      pip3 install fire
       dsl-compile --py ${_RANKER}_pipeline.py --output ${_RANKER}_pipeline.tar.gz
-      echo HAAAAAAAAAAAAAAAAAAAAAAAAHAHAHAHAHAHHAHA
-      echo $(ls -l)
   dir: 'pySearchML/kubeflow/pipelines'
   env:
     - 'PROJECT_ID=$PROJECT_ID'
   id:  'Compile Pipeline'
+
+
+#- name: 'gcr.io/$PROJECT_ID/pysearchml'
+  #entrypoint: 'bash'
+  #args:
+    #- '-c'
+    #- |
+      #dsl-compile --py ${_RANKER}_pipeline.py --output ${_RANKER}_pipeline.tar.gz
+      #echo HAAAAAAAAAAAAAAAAAAAAAAAAHAHAHAHAHAHHAHA
+      #echo $(ls -l)
+  #dir: 'pySearchML/kubeflow/pipelines'
+  #env:
+    #- 'PROJECT_ID=$PROJECT_ID'
+#  id:  'Compile Pipeline'
 
 
 # Upload Pipeline tar.gz to GCS
