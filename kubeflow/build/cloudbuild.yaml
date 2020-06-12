@@ -49,41 +49,40 @@ steps:
   id: 'Clone Git Repo'
 
 
-## Creates Service Account pysearchml
-#- name: 'gcr.io/cloud-builders/gcloud'
-  #entrypoint: 'bash'
-  #args:
-    #- '-c'
-    #- |
-      #./bin/manage_service_account.sh
-  #dir: 'pySearchML'
-  #env:
-    #- 'PROJECT_ID=$PROJECT_ID'
-#  id: 'Manage Service Account'
-
-
-# Build prepare_env Docker Image
+# Build pysearchml Docker Image
 - name: 'gcr.io/cloud-builders/docker'
-  args: ['build',
-    '-t',
-    'gcr.io/$PROJECT_ID/pysearchml',
-    '-f',
-    'kubernetes/Dockerfile',
-    '.'
-    ]
-  dir: 'pySearchML'
-  id: 'Prepare Env'
-
-
-# Compile Ranker Pipeline
-- name: 'python:3.7.7-slim'
   entrypoint: 'bash'
   args:
     - '-c'
     - |
-      pip3 install kfp --upgrade
-      pip3 install fire
+      docker build -t gcr.io/$PROJECT_ID/pysearchml -f kubernetes/Dockerfile .
+      docker push gcr.io/$PROJECT_ID/pysearchml
+  dir: 'pySearchML'
+  id: 'Build Dockerfile'
+
+
+# Compile Ranker Pipeline
+#- name: 'python:3.7.7-slim'
+  #entrypoint: 'bash'
+  #args:
+    #- '-c'
+    #- |
+      #pip3 install kfp --upgrade
+      #pip3 install fire
+      #dsl-compile --py ${_RANKER}_pipeline.py --output ${_RANKER}_pipeline.tar.gz
+  #dir: 'pySearchML/kubeflow/pipelines'
+  #env:
+    #- 'PROJECT_ID=$PROJECT_ID'
+#  id:  'Compile Pipeline'
+
+
+- name: 'gcr.io/$PROJECT_ID/pysearchml'
+  entrypoint: 'bash'
+  args:
+    - '-c'
+    - |
       dsl-compile --py ${_RANKER}_pipeline.py --output ${_RANKER}_pipeline.tar.gz
+      echo HAAAAAAAAAAAAAAAAAAAAAAAAHAHAHAHAHAHHAHA
   dir: 'pySearchML/kubeflow/pipelines'
   env:
     - 'PROJECT_ID=$PROJECT_ID'
@@ -132,8 +131,7 @@ steps:
   args:
     - '-c'
     - |
-      apt-get update && apt-get install curl -y
-      curl https://dl.google.com/dl/cloudsdk/release/google-cloud-sdk.tar.gz > /tmp/google-cloud-sdk.tar.gz
+      apt-get update && apt-get install curl -y curl https://dl.google.com/dl/cloudsdk/release/google-cloud-sdk.tar.gz > /tmp/google-cloud-sdk.tar.gz
       mkdir -p /usr/local/gcloud
       tar -C /usr/local/gcloud -xf /tmp/google-cloud-sdk.tar.gz
       /usr/local/gcloud/google-cloud-sdk/install.sh

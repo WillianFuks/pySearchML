@@ -20,10 +20,21 @@ def build_lambdamart_pipeline(
     es_host='elasticsearch.elastic-system.svc.cluster.local',
     force_restart='false'
 ):
-    component = PATH.parent.parent / 'components' / 'prepare_env' / 'component.yaml'
-    prepare_op_ = components.load_component_from_file(str(component))
+
+    main_path = PATH.parent.parent / 'components'
+
+    component_path = main_path / 'gcs' / 'component.yaml'
+    gs_op_ = components.load_component_from_file(str(component_path))
+    gs_op_ = update_op_project_id_img(gs_op_)
+    gs_op = gs_op_('gs://pysearchml/requirements.txt', '.').set_display_name('GS')
+
+    component_path =  main_path / 'prepare_env' / 'component.yaml'
+    prepare_op_ = components.load_component_from_file(str(component_path))
     prepare_op_ = update_op_project_id_img(prepare_op_)
 
     prepare_op = prepare_op_(bucket, es_host, force_restart).set_display_name(
         'Preparing Environment'
-    )
+    ).after(gs_op)
+
+
+

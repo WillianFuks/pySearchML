@@ -1,0 +1,11 @@
+name: Export GS Op
+description: Sends input data to specified GCS bucket
+inputs:
+  - {name: filename, type: String, description: 'n'}
+  - {name: path, type: String, description: 'n'}
+
+implementation:
+  container:
+    image: gcr.io/google.com/cloudsdktool/cloud-sdk
+    command: ['sh', '-c']
+    args: ['gsutil -m cp -r $0 $1', {inputValue: filename}, {inputValue: path}]

@@ -34,7 +34,7 @@ def upload_data(bucket, es_host, force_restart: bool=False):
         print('this is signer email: ', cre.signer_email)
         print('this is token: ', cre.token)
         print('this is valid: ', cre.valid)
-        print('proxy: ', stc._http_internal.proxies)
+        print('proxy: ', storage_client._http.proxies)
 
 
         bq_client = bigquery.Client()

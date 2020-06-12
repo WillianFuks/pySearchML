@@ -1,3 +1,5 @@
 google-cloud-bigquery
 google-cloud-storage
 elasticsearch
+kfp
+fire
