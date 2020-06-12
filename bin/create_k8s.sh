@@ -23,14 +23,14 @@ if [ $CLUSTER_EXISTS = false ]; then
     kubectl apply -f kubernetes/es/deploy_elasticsearch.yaml
 
     # Main reference for installing Kubeflow: https://www.kubeflow.org/docs/pipelines/installation/standalone-deployment/
-#    export PIPELINE_VERSION=0.2.2
-    #kubectl apply -k github.com/kubeflow/pipelines/manifests/kustomize/base/crds?ref=$PIPELINE_VERSION
-    #kubectl wait --for condition=established --timeout=60s crd/applications.app.k8s.io
-#    kubectl apply -k github.com/kubeflow/pipelines//manifests/kustomize/env/dev?ref=$PIPELINE_VERSION
+    export PIPELINE_VERSION=0.2.2
+    kubectl apply -k github.com/kubeflow/pipelines/manifests/kustomize/base/crds?ref=$PIPELINE_VERSION
+    kubectl wait --for condition=established --timeout=60s crd/applications.app.k8s.io
+    kubectl apply -k github.com/kubeflow/pipelines//manifests/kustomize/env/dev?ref=$PIPELINE_VERSION
 
-export PIPELINE_VERSION=0.5.1
-kubectl apply -k "github.com/kubeflow/pipelines/manifests/kustomize/cluster-scoped-resources?ref=$PIPELINE_VERSION"
-kubectl wait --for condition=established --timeout=60s crd/applications.app.k8s.io
-kubectl apply -k "github.com/kubeflow/pipelines/manifests/kustomize/env/dev?ref=$PIPELINE_VERSION"
+#export PIPELINE_VERSION=0.5.1
+#kubectl apply -k "github.com/kubeflow/pipelines/manifests/kustomize/cluster-scoped-resources?ref=$PIPELINE_VERSION"
+#kubectl wait --for condition=established --timeout=60s crd/applications.app.k8s.io
+#kubectl apply -k "github.com/kubeflow/pipelines/manifests/kustomize/env/dev?ref=$PIPELINE_VERSION"
 
 fi
