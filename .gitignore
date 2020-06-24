@@ -134,3 +134,4 @@ key.json
 
 # KFP pipelines
 *.tar.gz
+kf_deploys

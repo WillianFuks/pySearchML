@@ -2,69 +2,36 @@ import sys
 import argparse
 import pathlib
 import gzip
-import requests
 
 from google.cloud import storage, bigquery
 
 
-def upload_data(bucket, es_host, force_restart: bool=False):
+def upload_data(bucket, es_host, force_restart: bool = False):
     import json
     from elasticsearch import Elasticsearch
     from elasticsearch.helpers import bulk
 
-
     es = Elasticsearch(hosts=[es_host])
     path = pathlib.Path(__file__)
-    mapping_path = (
-        path.parent.parent.parent.parent / 'pySearchML' / 'es' / 'mapping.json'
-    )
-    schema = json.loads(open(str(mapping_path)).read())
+    es_mapping_path = path.parent / 'mapping.json'
+    schema = json.loads(open(str(es_mapping_path)).read())
     index = schema.pop('index')
 
     def read_file(bucket):
-
         storage_client = storage.Client.from_service_account_json('./key.json')
-        cre = storage_client._credentials
-        print('type: ', type(cre))
-        print('this is expired: ', cre.expired)
-        print('this is expiry: ', cre.expiry)
-        print('this is project id: ', cre.project_id)
-        print('this is scopes: ', cre.scopes)
-        print('this is email: ', cre.service_account_email)
-        print('this is signer email: ', cre.signer_email)
-        print('this is token: ', cre.token)
-        print('this is valid: ', cre.valid)
-        print('proxy: ', storage_client._http.proxies)
-
-
         bq_client = bigquery.Client()
-        cre = bq_client._credentials
-        print('this is expired: ', cre.expired)
-        print('this is expiry: ', cre.expiry)
-        print('this is project id: ', cre.project_id)
-        print('this is scopes: ', cre.scopes)
-        print('this is email: ', cre.service_account_email)
-        print('this is signer email: ', cre.signer_email)
-        print('this is token: ', cre.token)
-        print('this is valid: ', cre.valid)
-
-
 
         ds_ref = bq_client.dataset('pysearchml')
         bq_client.create_dataset(ds_ref, exists_ok=True)
 
         print('created bigquery')
-        print(requests.get('http://www.google.com').content)
 
         bucket_obj = storage_client.bucket(bucket)
         if not bucket_obj.exists():
             bucket_obj.create()
 
         # Query GA data
-        query_path = (
-            path.parent.parent.parent.parent / 'pySearchML' / 'utils' /
-            'extract_ga_data.sql'
-        )
+        query_path = path.parent / 'extract_ga_data.sql'
         query = open(str(query_path)).read()
         print('this is query: ', query)
         job_config = bigquery.QueryJobConfig()
@@ -96,17 +63,19 @@ def upload_data(bucket, es_host, force_restart: bool=False):
         for row in gzip.GzipFile(fileobj=file_obj, mode='rb'):
             row = json.loads(row)
             row['_index'] = index
-            yield row
+            return row
             c += 1
             if not c % 1000:
                 print(c)
+
+    read_file(bucket)
 
     if force_restart or not es.indices.exists(index):
         es.indices.delete(index, ignore=[400, 404])
         print('deleted index')
         es.indices.create(index, **schema)
         print('schema created')
-        bulk(es, read_file(bucket), request_timeout=30)
+        bulk(None, read_file(bucket), request_timeout=30)
 
 
 if __name__ == '__main__':
@@ -128,6 +97,5 @@ if __name__ == '__main__':
         dest='bucket',
         type=str
     )
-
     args, _ = parser.parse_known_args(sys.argv[1:])
     upload_data(args.bucket, args.es_host, args.force_restart)
