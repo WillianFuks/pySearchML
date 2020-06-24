@@ -12,4 +12,4 @@ RUN pip install kfp --upgrade
 
 COPY --from=gcloud /google-cloud-sdk /google-cloud-sdk
 
-ENTRYPOINT ["bash"]
+ENTRYPOINT ["sh"]

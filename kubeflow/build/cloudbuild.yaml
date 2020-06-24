@@ -59,18 +59,18 @@ steps:
     - 'COMPUTE_ZONE=${_COMPUTE_ZONE}'
   id: 'Build KFP Cluster'
 
-# Build Docker Images
-- name: 'gcr.io/cloud-builders/docker'
-  entrypoint: 'bash'
-  args:
-    - '-c'
-    - |
-      docker build -t gcr.io/$PROJECT_ID/prepare_env -f kubeflow/components/prepare_env/Dockerfile .
-      docker build -t gcr.io/$PROJECT_ID/pipelines -f kubeflow/pipelines/Dockerfile .
-      docker push gcr.io/$PROJECT_ID/prepare_env
-      docker push gcr.io/$PROJECT_ID/pipelines
-  dir: 'pySearchML'
-  id: 'Build Docker Images'
+## Build Docker Images
+#- name: 'gcr.io/cloud-builders/docker'
+  #entrypoint: 'bash'
+  #args:
+    #- '-c'
+    #- |
+      #docker build -t gcr.io/$PROJECT_ID/prepare_env -f kubeflow/components/prepare_env/Dockerfile .
+      #docker build -t gcr.io/$PROJECT_ID/pipelines -f kubeflow/pipelines/Dockerfile .
+      #docker push gcr.io/$PROJECT_ID/prepare_env
+      #docker push gcr.io/$PROJECT_ID/pipelines
+  #dir: 'pySearchML'
+#  id: 'Build Docker Images'
 
 # Compile Ranker Pipeline
 - name: 'gcr.io/$PROJECT_ID/pipelines'
@@ -111,29 +111,3 @@ steps:
   dir: 'pySearchML/kubeflow/pipelines/'
   id:  'Deploy Pipeline'
   waitFor: ['Compile Pipeline', 'Build KFP Cluster', 'Get Host']
-
-# Deploy Ranker Pipeline in KFP
-#- name: 'python:3.7.7-slim'
-  #entrypoint: 'bash'
-  #args:
-    #- '-c'
-    #- |
-      #apt-get update && apt-get install curl -y
-      #curl https://dl.google.com/dl/cloudsdk/release/google-cloud-sdk.tar.gz > /tmp/google-cloud-sdk.tar.gz
-      #mkdir -p /usr/local/gcloud
-      #tar -C /usr/local/gcloud -xf /tmp/google-cloud-sdk.tar.gz
-      #/usr/local/gcloud/google-cloud-sdk/install.sh
-      #export PATH=$$PATH:/usr/local/gcloud/google-cloud-sdk/bin
-      #pip3 install kfp --upgrade
-      #pip3 install fire
-      #python helper.py deploy-pipeline --host=$(cat /workspace/k8_host.txt) --ranker=${_RANKER} --version=${_VERSION}
-  #dir: 'pySearchML/kubeflow/pipelines/'
-  #env:
-    #- 'CLOUDSDK_COMPUTE_ZONE=${_COMPUTE_ZONE}'
-    #- 'CLOUDSDK_CONTAINER_CLUSTER=${_CLUSTER_NAME}'
-  #id:  'Deploy Pipeline'
-#  waitFor: ['Compile Pipeline', 'Build KFP Cluster', 'Get Host']
-
-
-#images:
-#- 'gcr.io/$PROJECT_ID/pysearchml'
