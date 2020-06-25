@@ -9,4 +9,4 @@ _VERSION='0.0.0'
 
 ./kubeflow/build/manage_service_account.sh
 
-gcloud builds submit --no-source --config kubeflow/build/cloudbuild.yaml --substitutions $SUBSTITUTIONS
+gcloud builds submit --no-source --config kubeflow/build/cloudbuild.yaml --substitutions $SUBSTITUTIONS --timeout 30m
