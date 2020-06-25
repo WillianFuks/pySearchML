@@ -1,4 +1,5 @@
 import os
+import json
 import kfp
 import fire
 from datetime import datetime
@@ -19,7 +20,7 @@ def get_pipe_by_name(client, name):
     try:
         pipes = client.list_pipelines()
         pipeline = [pipe for pipe in pipes.pipelines if pipe.name == name]
-    except:
+    except Exception:
         pipeline = None
 
     if pipeline:
@@ -62,7 +63,7 @@ def main(action, host, ranker='lambdamart', **kwargs):
         experiment_name = kwargs['experiment_name']
         run_experiment(experiment_name)
     else:
-        raise ValueError(f'Invalid operation name: {function}.')
+        raise ValueError(f'Invalid operation name: {action}.')
 
 
 if __name__ == '__main__':

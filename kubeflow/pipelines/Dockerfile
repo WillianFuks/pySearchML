@@ -9,6 +9,7 @@ ENV GOOGLE_APPLICATION_CREDENTIALS=/key.json
 ENV PATH=/google-cloud-sdk/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
 
 RUN pip install kfp --upgrade
+RUN pip install fire
 
 COPY --from=gcloud /google-cloud-sdk /google-cloud-sdk
 
