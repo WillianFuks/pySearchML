@@ -13,7 +13,7 @@ def upload_data(bucket, es_host, force_restart: bool = False):
 
     es = Elasticsearch(hosts=[es_host])
     path = pathlib.Path(__file__)
-    es_mapping_path = path.parent / 'mapping.json'
+    es_mapping_path = path.parent / 'es_mapping.json'
     schema = json.loads(open(str(es_mapping_path)).read())
     index = schema.pop('index')
 
@@ -31,7 +31,7 @@ def upload_data(bucket, es_host, force_restart: bool = False):
             bucket_obj.create()
 
         # Query GA data
-        query_path = path.parent / 'extract_ga_data.sql'
+        query_path = path.parent / 'ga_data.sql'
         query = open(str(query_path)).read()
         print('this is query: ', query)
         job_config = bigquery.QueryJobConfig()
@@ -68,14 +68,12 @@ def upload_data(bucket, es_host, force_restart: bool = False):
             if not c % 1000:
                 print(c)
 
-    read_file(bucket)
-
     if force_restart or not es.indices.exists(index):
         es.indices.delete(index, ignore=[400, 404])
         print('deleted index')
         es.indices.create(index, **schema)
         print('schema created')
-        bulk(None, read_file(bucket), request_timeout=30)
+        bulk(es, read_file(bucket), request_timeout=30)
 
 
 if __name__ == '__main__':

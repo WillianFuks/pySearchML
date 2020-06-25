@@ -103,7 +103,7 @@ steps:
   waitFor: ['Build KFP Cluster']
 
 # Deploy Pipeline to K8
-- name: 'gcr.io/$PROJECT_ID/pipeline'
+- name: 'gcr.io/$PROJECT_ID/pipelines'
   args:
     - '-c'
     - |
