@@ -107,6 +107,7 @@ steps:
   args:
     - '-c'
     - |
+      kubectl port-forward -n kubeflow svc/ml-pipeline-ui 8080:80 &
       python helper.py deploy-pipeline --host=$(cat /workspace/k8_host.txt) --ranker=${_RANKER} --version=${_VERSION}
   dir: 'pySearchML/kubeflow/pipelines/'
   id:  'Deploy Pipeline'

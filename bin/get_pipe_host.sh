@@ -1,6 +1,7 @@
 #!/bin/sh
 
-HOST=$(kubectl describe configmap inverse-proxy-config -n kubeflow | grep googleusercontent.com)
+#HOST=$(kubectl describe configmap inverse-proxy-config -n kubeflow | grep googleusercontent.com)
+HOST="localhost:8080"
 
 # Means Proxy is still being created
 if [ -z "$HOST" ]; then

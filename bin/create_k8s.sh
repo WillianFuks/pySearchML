@@ -38,10 +38,7 @@ if [ $CLUSTER_EXISTS = false ]; then
 
 export PIPELINE_VERSION=0.5.1
 kubectl apply -k "github.com/kubeflow/pipelines/manifests/kustomize/cluster-scoped-resources?ref=$PIPELINE_VERSION"
-echo "Applied cluster scoped resources."
 kubectl wait --for condition=established --timeout=60s crd/applications.app.k8s.io
-echo "Done waiting CRDs creation."
-kubectl apply -k "github.com/kubeflow/pipelines/manifests/kustomize/env/dev/?ref=$PIPELINE_VERSION"
-echo "Applied dev layer."
+kubectl apply -k "github.com/kubeflow/pipelines/manifests/kustomize/env/platform-agnostic/?ref=$PIPELINE_VERSION"
 #kubectl wait applications/pipeline -n kubeflow --for condition=Ready --timeout=1800s
 fi
