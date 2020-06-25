@@ -29,6 +29,7 @@ def get_pipe_by_name(client, name):
 
 
 def deploy_pipeline(ranker, host, version):
+    print('THIS IS HOST; ', host)
     client = kfp.Client(host=host)
     name = f'pysearchml_{ranker}_{version}'
     # Supposed page_token is not necessary for this application
