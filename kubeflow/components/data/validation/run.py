@@ -51,6 +51,7 @@ def download_data(validation_init_date, validation_end_date, bucket, destination
     blobs = bucket_obj.list_blobs(prefix='data')
     for blob in blobs:
         blob.download_to_filename(f"{destination}/{blob.name.split('/')[-1]}")
+        blob.delete()
 
     # delete BQ table
     bq_client.delete_table(table_ref)

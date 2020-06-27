@@ -119,9 +119,8 @@ def process_judgment(percentiles: list, judgment: float) -> int:
         return 4
 
 
-def build_file(
+def build_train_file(
     model_name: str,
-    index: str,
     es_batch: int,
     es_client
 ) -> None:
@@ -133,8 +132,6 @@ def build_file(
     ----
       model_name: str
           Name to identify experiment in Kubeflow
-      index: str
-          Index to use from Elasticsearch
       es_batch: int
           Sets how many queries to aggregate when using multisearch API.
       es_client: Elasticsearch
@@ -148,7 +145,7 @@ def build_file(
     for search_keys, docs, judgments in read_judgment_files(model_name):
         judge_list.append(judgments)
 
-        search_arr.append(json.dumps({'index': index}))
+        search_arr.append(json.dumps({'index': 'pysearchml'}))
         search_arr.append(json.dumps(get_logging_query(model_name, docs, search_keys)))
 
         if counter % es_batch == 0:
@@ -213,7 +210,7 @@ def write_features(
         queries_counter[0] += 1
 
     if rows:
-        path = f'/tmp/pysearchml/{model_name}/data/train/ranklib_train.txt'
+        path = f'/tmp/pysearchml/{model_name}/train/train_dataset.txt'
         os.makedirs(os.path.dirname(path), exist_ok=True)
         with open(path, 'a') as f:
             f.write(os.linesep.join(rows) + os.linesep)
@@ -281,6 +278,8 @@ def get_logging_query(
     }
     log_query['query']['bool']['filter'][0]['terms']['_id'] = docs
     log_query['query']['bool']['should'][0]['sltr']['params'] = search_keys
+    print(log_query)
+    1 / 0
     return log_query
 
 
@@ -290,7 +289,7 @@ def read_judgment_files(
     """
     Reads resulting files of the judgments updating process.
     """
-    files = glob.glob(f'/tmp/pysearchml/{model_name}/data/judgments/*.gz')
+    files = glob.glob(f'/tmp/pysearchml/{model_name}/judgments/*.gz')
     for file_ in files:
         for row in gzip.GzipFile(file_):
             row = json.loads(row)
@@ -385,8 +384,8 @@ def main(args: NamedTuple, es_client: Elasticsearch) -> None:
           Python Elasticsearch client
     """
     # download_data(args)
-    build_judgment_files(args.model_name)
-    # build_file(args.model_name, args.index, args.es_batch, es_client)
+    # build_judgment_files(args.model_name)
+    build_train_file(args.model_name, args.es_batch, es_client)
 
 
 if __name__ == '__main__':

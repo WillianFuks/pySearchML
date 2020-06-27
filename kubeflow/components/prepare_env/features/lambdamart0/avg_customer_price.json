@@ -7,13 +7,13 @@
             "script_score" : {
                 "script" : {
                     "params": {
-                        "avg_customer_price": "{{avg_customer_price}}"
+                        "customer_avg_ticket": "{{customer_avg_ticket}}"
                     },
-                    "source": "return Math.log(1 + Math.abs(doc['price'].value - Float.parseFloat(params.avg_customer_price)))"
+                    "source": "return Math.log(1 + Math.abs(doc['price'].value - Float.parseFloat(params.customer_avg_ticket)))"
                 }
             }
         }
     },
-    "params": ["avg_customer_price"],
-    "name": "avg_customer_price"
+    "params": ["customer_avg_ticket"],
+    "name": "customer_avg_ticket"
 }

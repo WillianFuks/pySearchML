@@ -39,7 +39,7 @@ def process_feature_file(filename: str) -> Dict[str, Any]:
     return feature_spec
 
 
-def create_feature_store(es_host: str, force_restart: bool = False) -> None:
+def create_feature_store(es_host: str) -> None:
     """
     RankLib uses the concept of "features store" where information about features is
     stored on Elasticsearch. Here, the store is just created but now features are
@@ -47,15 +47,15 @@ def create_feature_store(es_host: str, force_restart: bool = False) -> None:
 
     Args
     ----
-      force_restart: bool
+      restart: bool
           If `True` then deletes feature store on Elasticsearch and create it again.
       es_host: str
           Hostname where to reach Elasticsearch.
     """
-    feature_store_url = urljoin(es_host, '_ltr')
-    if force_restart:
-        requests.delete(feature_store_url)
-        requests.put(feature_store_url)
+    host = f'http://{es_host}'
+    feature_store_url = urljoin(host, '_ltr')
+    requests.delete(feature_store_url)
+    requests.put(feature_store_url)
 
 
 def create_feature_set(es_host: str, model_name: str) -> None:
@@ -99,8 +99,9 @@ def post_feature_set(
       es_host: str
           Hostname where Elasticsearch is located.
     """
+    host = f'http://{es_host}'
     url = f'_ltr/_featureset/{model_name}'
-    url = urljoin(es_host, url)
+    url = urljoin(host, url)
     header = {'Content-Type': 'application/json'}
     resp = requests.post(url, data=json.dumps(feature_set), headers=header)
     if not resp.ok:
@@ -108,17 +109,11 @@ def post_feature_set(
 
 
 def main(args: NamedTuple):
-    upload_data(args.bucket, args.es_host, args.force_restart)
-    create_feature_store(args.es_host, args.force_restart)
-    create_feature_set(args.es_host, args.model_name)
-
-
-def upload_data(bucket, es_host, force_restart: bool = False):
     import json
     from elasticsearch import Elasticsearch
     from elasticsearch.helpers import bulk
 
-    es = Elasticsearch(hosts=[es_host])
+    es = Elasticsearch(hosts=[args.es_host])
     es_mapping_path = PATH / 'es_mapping.json'
     schema = json.loads(open(str(es_mapping_path)).read())
     index = schema.pop('index')
@@ -179,12 +174,14 @@ def upload_data(bucket, es_host, force_restart: bool = False):
         # Delete BQ Table
         bq_client.delete_table(table_ref)
 
-    if force_restart or not es.indices.exists(index):
+    if args.force_restart or not es.indices.exists(index):
         es.indices.delete(index, ignore=[400, 404])
         print('deleted index')
         es.indices.create(index, **schema)
         print('schema created')
-        bulk(es, read_file(bucket), request_timeout=30)
+        bulk(es, read_file(args.bucket), request_timeout=30)
+        create_feature_store(args.es_host)
+        create_feature_set(args.es_host, args.model_name)
     print('Finished preparing environment.')
 
 
