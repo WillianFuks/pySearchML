@@ -13,6 +13,9 @@
                 "category": {
                     "type": "text"
                 },
+                "price": {
+                    "type": "float"
+                },
                 "performances": {
                     "type": "object",
                     "properties": {

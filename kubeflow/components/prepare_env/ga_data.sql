@@ -2,6 +2,7 @@ SELECT
   sku,
   name,
   category,
+  COALESCE(global_price, 0) AS price,
   STRUCT(
     STRUCT(
       COALESCE(global_impressions, 0) AS impressions,
@@ -28,6 +29,7 @@ FROM(
     impressions,
     SUM(clicks) OVER(PARTITION BY sku) AS global_clicks,
     clicks,
+    AVG(price) OVER(PARTITION BY sku) AS global_price,
   FROM(
     SELECT
       ARRAY(
@@ -37,7 +39,8 @@ FROM(
           v2ProductCategory AS category,
           v2ProductName AS name,
           SUM(CAST(isImpression AS INT64)) AS impressions,
-          SUM(CAST(isClick AS INT64)) AS clicks
+          SUM(CAST(isClick AS INT64)) AS clicks,
+          AVG(productPrice / 1e6) AS price
         FROM UNNEST(hits), UNNEST(product)
         GROUP BY channel, sku, category, name
       ) AS products
@@ -52,4 +55,5 @@ GROUP BY
   name,
   category,
   global_impressions,
-  global_clicks
+  global_clicks,
+  global_price

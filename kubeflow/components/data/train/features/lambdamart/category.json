@@ -1,0 +1,16 @@
+{
+   "query": {
+       "bool": {
+           "minimum_should_match": 1,
+           "should": [
+               {
+                   "match": {
+                       "category": "{{search_term}}"
+                   }
+               }
+           ]
+       }
+   },
+   "params": ["search_term"],
+   "name": "BM25 category"
+}

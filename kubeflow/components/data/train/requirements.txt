@@ -1,0 +1,7 @@
+google-cloud-bigquery
+google-cloud-storage
+elasticsearch
+Cython
+pyClickModels
+numpy
+requests
