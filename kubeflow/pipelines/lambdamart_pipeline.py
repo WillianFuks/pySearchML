@@ -19,7 +19,8 @@ def build_lambdamart_pipeline(
     train_init_date='20170801',
     train_end_date='20170801',
     validation_init_date='20170802',
-    validation_end_date='20170802'
+    validation_end_date='20170802',
+    model_name='lambdamart0'
 ):
 
     main_path = PATH.parent.parent / 'components'
@@ -36,7 +37,8 @@ def build_lambdamart_pipeline(
     prepare_op = prepare_op_(
         bucket=bucket,
         es_host=es_host,
-        force_restart=force_restart
+        force_restart=force_restart,
+        model_name=model_name
     ).set_display_name('Preparing Environment')
 
     component_path = main_path / 'data' / 'validation' / 'component.yaml'
@@ -44,13 +46,13 @@ def build_lambdamart_pipeline(
     validation_op_ = update_op_project_id_img(validation_op_)
 
     _ = validation_op_(
-        bucket=bucket,
+        bucket=f'{bucket}/validation/regular',
         validation_init_date=validation_init_date,
         validation_end_date=validation_end_date
     ).set_display_name('Build Regular Validation Dataset.').after(prepare_op)
 
     _ = validation_op_(
-        bucket=bucket,
+        bucket=f'{bucket}/validation/train',
         validation_init_date=train_init_date,
         validation_end_date=train_end_date
     ).set_display_name('Build Validation Dataset of Train Data.').after(prepare_op)
