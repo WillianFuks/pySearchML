@@ -4,8 +4,8 @@ COPY kubeflow/components/data/train/ /train
 WORKDIR /train
 COPY ./key.json .
 
-ENV GOOGLE_APPLICATION_CREDENTIALS=./key.json
+ENV GOOGLE_APPLICATION_CREDENTIALS=key.json
 
 RUN pip install -r requirements.txt
 
-CMD ["python", "run.py"]
+ENTRYPOINT ["python", "run.py"]

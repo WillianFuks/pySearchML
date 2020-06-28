@@ -65,13 +65,13 @@ steps:
   args:
     - '-c'
     - |
-      docker build -t gcr.io/$PROJECT_ID/prepare_env -f kubeflow/components/prepare_env/Dockerfile .
+      #docker build -t gcr.io/$PROJECT_ID/prepare_env -f kubeflow/components/prepare_env/Dockerfile .
       docker build -t gcr.io/$PROJECT_ID/pipelines -f kubeflow/pipelines/Dockerfile .
-      docker build -t gcr.io/$PROJECT_ID/data_validation -f kubeflow/components/data/validation/Dockerfile .
+      #docker build -t gcr.io/$PROJECT_ID/data_validation -f kubeflow/components/data/validation/Dockerfile .
       docker build -t gcr.io/$PROJECT_ID/data_train -f kubeflow/components/data/train/Dockerfile .
-      docker push gcr.io/$PROJECT_ID/prepare_env
+      #docker push gcr.io/$PROJECT_ID/prepare_env
       docker push gcr.io/$PROJECT_ID/pipelines
-      docker push gcr.io/$PROJECT_ID/data_validation
+      #docker push gcr.io/$PROJECT_ID/data_validation
       docker push gcr.io/$PROJECT_ID/data_train
   dir: 'pySearchML'
   id: 'Build Docker Images'
@@ -114,9 +114,8 @@ steps:
       gcloud components install kubectl
       gcloud container clusters get-credentials pysearchml --zone=$_COMPUTE_ZONE
       kubectl port-forward -n kubeflow svc/ml-pipeline-ui 7067:80 &
-      PID=$$!
+      sleep 10s
       python helper.py deploy-pipeline --host=$(cat /workspace/k8_host.txt) --ranker=${_RANKER} --version=${_VERSION}
-      kill $$PID
   dir: 'pySearchML/kubeflow/pipelines/'
   id:  'Deploy Pipeline'
   waitFor: ['Compile Pipeline', 'Build KFP Cluster', 'Get Host']
