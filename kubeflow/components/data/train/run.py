@@ -208,6 +208,7 @@ def write_features(
         queries_counter[0] += 1
 
     if rows:
+        print(rows[0])
         path = f'{destination}/train_dataset.txt'
         os.makedirs(os.path.dirname(path), exist_ok=True)
         with open(path, 'a') as f:
@@ -376,8 +377,8 @@ def main(args: NamedTuple, es_client: Elasticsearch) -> None:
       es_client: Elasticsearch
           Python Elasticsearch client
     """
-    # download_data(args)
-    # build_judgment_files()
+    download_data(args)
+    build_judgment_files()
     build_train_file(args.model_name, args.es_batch, es_client, args.destination)
 
 
@@ -430,7 +431,6 @@ if __name__ == '__main__':
         type=str,
         help='Name of featureset store as saved in Elasticsearch.'
     )
-
     args, _ = parser.parse_known_args(sys.argv[1:])
     es_client = Elasticsearch(hosts=[args.es_host])
     main(args, es_client)
