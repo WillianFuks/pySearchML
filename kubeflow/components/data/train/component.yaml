@@ -1,20 +1,22 @@
-name: Build Validation Dataset
-description: Queries over GA data to extract customers, their searches and the respective purchases on each search
+name: Build Train Dataset
+description: Queries over GA data to extract customers, their searches and the context at which they browsed the site.
 
 inputs:
-  - {name: validation_init_date, type: String, description: 'Date to start querying from validation dataset. Follows %Y%M%D format.'}
-  - {name: validation_end_date, type: String, description: 'Date to end querying from validation dataset. Follows %Y%M%D format.'}
+  - {name: train_init_date, type: String, description: 'Date to start querying from train dataset. Follows %Y%M%D format.'}
+  - {name: train_end_date, type: String, description: 'Date to end querying from train dataset. Follows %Y%M%D format.'}
   - {name: bucket, type: String}
+  - {name: es_host, type: String, description: 'Hostname of Elasticsearch.'}
 
 outputs:
-  - {name: validation_data, type: LocalPath, description: 'Path where validation dataset is located.'}
+  - {name: destination, type: LocalPath, description: 'Path where train dataset is located.'}
 
 implementation:
   container:
-    image: gcr.io/{PROJECT_ID}/data_validation
+    image: gcr.io/{PROJECT_ID}/data_train
     args: [
-      --validation_init_date, {inputValue: validation_init_date},
-      --validation_end_date, {inputValue: validation_end_date},
+      --train_init_date, {inputValue: train_init_date},
+      --train_end_date, {inputValue: train_end_date},
       --bucket, {inputValue: bucket},
-      --destination, {outputPath: validation_data}
+      --es_host, {inputValue: es_host},
+      --destination, {outputPath: destination}
     ]

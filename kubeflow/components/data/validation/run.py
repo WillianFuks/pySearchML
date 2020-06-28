@@ -8,12 +8,13 @@ from shutil import rmtree
 from google.cloud import storage, bigquery
 
 
-def download_data(validation_init_date, validation_end_date, bucket, destination):
+PATH = pathlib.Path(__file__).parent
+
+
+def main(validation_init_date, validation_end_date, bucket, destination):
     # Remove everything and deletes destination folder to receive new files.
     rmtree(destination, ignore_errors=True)
     os.makedirs(destination, exist_ok=True)
-
-    path = pathlib.Path(__file__)
 
     storage_client = storage.Client()
     bq_client = bigquery.Client()
@@ -24,7 +25,7 @@ def download_data(validation_init_date, validation_end_date, bucket, destination
     table_ref = ds_ref.table(table_id)
 
     # Query GA data
-    query_path = path.parent / 'validation.sql'
+    query_path = PATH / 'validation.sql'
     query = open(str(query_path)).read()
     query = query.format(validation_init_date=validation_init_date,
                          validation_end_date=validation_end_date)
@@ -37,18 +38,19 @@ def download_data(validation_init_date, validation_end_date, bucket, destination
     job.result()
 
     # export BigQuery table to GCS
-    destination_uri = f'gs://{bucket}/data/validation*.gz'
+    # bucket will be set in accordance to which validation dataset is referenced, i.e.,
+    # whether regular validation or validation for the training dataset.
+    destination_uri = f"gs://{bucket.split('/')[0]}/validation*.gz"
 
     extract_config = bigquery.ExtractJobConfig()
     extract_config.compression = 'GZIP'
     extract_config.destination_format = 'NEWLINE_DELIMITED_JSON'
-    job = bq_client.extract_table(table_ref, destination_uri,
-                                  job_config=extract_config)
+    job = bq_client.extract_table(table_ref, destination_uri, job_config=extract_config)
     job.result()
 
     # Download data
-    bucket_obj = storage_client.bucket(bucket)
-    blobs = bucket_obj.list_blobs(prefix='data')
+    bucket_obj = storage_client.bucket(bucket.split('/')[0])
+    blobs = bucket_obj.list_blobs(prefix=bucket.partition('/')[-1])
     for blob in blobs:
         blob.download_to_filename(f"{destination}/{blob.name.split('/')[-1]}")
         blob.delete()
@@ -82,6 +84,11 @@ if __name__ == '__main__':
         type=str,
         help='Path where validation dataset gzipped files will be stored.'
     )
+
     args, _ = parser.parse_known_args(sys.argv[1:])
-    download_data(args.validation_init_date, args.validation_end_date, args.bucket,
-                  args.destination)
+    main(
+        args.validation_init_date,
+        args.validation_end_date,
+        args.bucket,
+        args.destination
+    )

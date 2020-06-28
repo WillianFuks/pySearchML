@@ -27,24 +27,19 @@ training process. For information is available at:
 PATH = pathlib.Path(__file__).parent
 
 
-def build_judgment_files(model_name: str) -> None:
+def build_judgment_files() -> None:
     """
     Uses DBN Models and the clickstream data to come up with the Judgmnets inferences.
-
-    Args
-    ----
-      model_name: str
-          Name of model that specifies experiment on Kubeflow.
     """
     model = DBN.DBNModel()
 
-    clickstream_files_path = f'/tmp/pysearchml/{args.model_name}/clickstream/'
+    clickstream_files_path = '/tmp/pysearchml/clickstream/'
 
-    model_path = f'/tmp/pysearchml/{args.model_name}/model/model.gz'
+    model_path = '/tmp/pysearchml/model/model.gz'
     rmtree(os.path.dirname(model_path), ignore_errors=True)
     os.makedirs(os.path.dirname(model_path))
 
-    judgment_files_path = f'/tmp/pysearchml/{args.model_name}/judgments/judgments.gz'
+    judgment_files_path = '/tmp/pysearchml/judgments/judgments.gz'
     rmtree(os.path.dirname(judgment_files_path), ignore_errors=True)
     os.makedirs(os.path.dirname(judgment_files_path))
 
@@ -122,7 +117,8 @@ def process_judgment(percentiles: list, judgment: float) -> int:
 def build_train_file(
     model_name: str,
     es_batch: int,
-    es_client
+    es_client: Elasticsearch,
+    destination: str
 ) -> None:
     """
     After the input file has been updated with judgment data, logs features from
@@ -131,41 +127,43 @@ def build_train_file(
     Args
     ----
       model_name: str
-          Name to identify experiment in Kubeflow
+          Name of feature set store on Elasticsearch.
       es_batch: int
           Sets how many queries to aggregate when using multisearch API.
       es_client: Elasticsearch
           Python Elasticsearch client
+      destination: str
+          Path where to write results to.
     """
     counter = 1
     # works as a pointer
     queries_counter = [0]
     search_arr, judge_list = [], []
+    os.makedirs(destination, exist_ok=True)
 
-    for search_keys, docs, judgments in read_judgment_files(model_name):
+    for search_keys, docs, judgments in read_judgment_files():
         judge_list.append(judgments)
 
         search_arr.append(json.dumps({'index': 'pysearchml'}))
         search_arr.append(json.dumps(get_logging_query(model_name, docs, search_keys)))
 
         if counter % es_batch == 0:
-            write_features(model_name, search_arr, judge_list, queries_counter,
-                           es_client)
+            write_features(search_arr, judge_list, queries_counter, es_client,
+                           destination)
             search_arr, judge_list = [], []
 
         counter += 1
 
     if search_arr:
-        write_features(model_name, search_arr, judge_list, queries_counter,
-                       es_client)
+        write_features(search_arr, judge_list, queries_counter, es_client, destination)
 
 
 def write_features(
-    model_name: str,
     search_arr: List[str],
     judge_list: List[List[str]],
     queries_counter: List[int],
-    es_client: Elasticsearch
+    es_client: Elasticsearch,
+    destination: str
 ) -> None:
     """
     Sends the query to Elasticsearch and uses the result to write final RankLib training
@@ -173,8 +171,6 @@ def write_features(
 
     Args
     ----
-      model_name: str
-          Name that identifies experiment on Kubeflow
       search_arr: List[str]
           Array containing multiple queries to send against Elasticsearch
       judge_list: List[List[str]]
@@ -185,6 +181,8 @@ def write_features(
           RankLib file with appropriate values. It's a list so it works as a C pointer.
       es: Elasticsearch
           Python client for interacting with Elasticsearch
+      destination: str
+          Path where to save results to.
     """
     if not search_arr:
         return
@@ -210,7 +208,7 @@ def write_features(
         queries_counter[0] += 1
 
     if rows:
-        path = f'/tmp/pysearchml/{model_name}/train/train_dataset.txt'
+        path = f'{destination}/train_dataset.txt'
         os.makedirs(os.path.dirname(path), exist_ok=True)
         with open(path, 'a') as f:
             f.write(os.linesep.join(rows) + os.linesep)
@@ -278,18 +276,14 @@ def get_logging_query(
     }
     log_query['query']['bool']['filter'][0]['terms']['_id'] = docs
     log_query['query']['bool']['should'][0]['sltr']['params'] = search_keys
-    print(log_query)
-    1 / 0
     return log_query
 
 
-def read_judgment_files(
-    model_name: str
-) -> Iterator[Tuple[Dict[str, Any], List[str], List[str]]]:
+def read_judgment_files() -> Iterator[Tuple[Dict[str, Any], List[str], List[str]]]:
     """
     Reads resulting files of the judgments updating process.
     """
-    files = glob.glob(f'/tmp/pysearchml/{model_name}/judgments/*.gz')
+    files = glob.glob('/tmp/pysearchml/judgments/*.gz')
     for file_ in files:
         for row in gzip.GzipFile(file_):
             row = json.loads(row)
@@ -312,10 +306,8 @@ def download_data(args: NamedTuple):
             Follows format %Y%M%D, represents from where the query should start
             retrieving data from.
         train_end_date: str
-        model_name: str
-            Name that uniquely identifies model on Kubeflow experiments.
     """
-    path_to_download = f'/tmp/pysearchml/{args.model_name}/clickstream'
+    path_to_download = '/tmp/pysearchml/clickstream'
     rmtree(path_to_download, ignore_errors=True)
     os.makedirs(path_to_download, exist_ok=True)
 
@@ -340,7 +332,7 @@ def download_data(args: NamedTuple):
     job.result()
 
     # export BigQuery table to GCS
-    destination_uri = f'gs://{args.bucket}/{args.model_name}/train/*.gz'
+    destination_uri = f'gs://{args.bucket}/train/*.gz'
 
     extract_config = bigquery.ExtractJobConfig()
     extract_config.compression = 'GZIP'
@@ -350,11 +342,12 @@ def download_data(args: NamedTuple):
 
     # Download data
     bucket_obj = storage_client.bucket(args.bucket)
-    blobs = bucket_obj.list_blobs(prefix=f'{args.model_name}/train/')
+    blobs = bucket_obj.list_blobs(prefix='train')
     for blob in blobs:
         blob.download_to_filename(
             f"{path_to_download}/judgments_{blob.name.split('/')[-1]}"
         )
+        blob.delete()
 
     # Delete BQ Table
     bq_client.delete_table(table_ref)
@@ -384,8 +377,8 @@ def main(args: NamedTuple, es_client: Elasticsearch) -> None:
           Python Elasticsearch client
     """
     # download_data(args)
-    # build_judgment_files(args.model_name)
-    build_train_file(args.model_name, args.es_batch, es_client)
+    # build_judgment_files()
+    build_train_file(args.model_name, args.es_batch, es_client, args.destination)
 
 
 if __name__ == '__main__':
@@ -418,13 +411,6 @@ if __name__ == '__main__':
         help='Host address to reach Elasticsearch.'
     )
     parser.add_argument(
-        '--model_name',
-        dest='model_name',
-        type=str,
-        help=('Assigns a name for the RankLib model. Each experiment on Kubeflow '
-              'should have a specific name in order to preserver their results.')
-    )
-    parser.add_argument(
         '--es_batch',
         dest='es_batch',
         type=int,
@@ -432,6 +418,19 @@ if __name__ == '__main__':
         help=('Determines how many items to send at once to Elasticsearch when using '
               'multisearch API.')
     )
+    parser.add_argument(
+        '--destination',
+        dest='destination',
+        type=str,
+        help='Path where to write results to.'
+    )
+    parser.add_argument(
+        '--model_name',
+        dest='model_name',
+        type=str,
+        help='Name of featureset store as saved in Elasticsearch.'
+    )
+
     args, _ = parser.parse_known_args(sys.argv[1:])
     es_client = Elasticsearch(hosts=[args.es_host])
     main(args, es_client)

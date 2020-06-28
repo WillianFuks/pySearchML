@@ -118,21 +118,21 @@ def main(args: NamedTuple):
     schema = json.loads(open(str(es_mapping_path)).read())
     index = schema.pop('index')
 
-    def read_file(bucket):
-        storage_client = storage.Client()
-        bq_client = bigquery.Client()
+    storage_client = storage.Client()
+    bq_client = bigquery.Client()
 
+    def read_file(bucket, storage_client=storage_client, bq_client=bq_client):
         ds_ref = bq_client.dataset('pysearchml')
         bq_client.create_dataset(ds_ref, exists_ok=True)
 
         table_id = 'es_docs'
         table_ref = ds_ref.table(table_id)
 
-        bucket_obj = storage_client.bucket(bucket.split('/')[0])
+        bucket_obj = storage_client.bucket(bucket)
         if not bucket_obj.exists():
             bucket_obj.create()
 
-        # # Query GA data
+        # Query GA data
         query_path = PATH / 'ga_data.sql'
         query = open(str(query_path)).read()
         job_config = bigquery.QueryJobConfig()

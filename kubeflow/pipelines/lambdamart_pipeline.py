@@ -14,7 +14,7 @@ PATH = pathlib.Path(__file__)
 )
 def build_lambdamart_pipeline(
     bucket='pysearchml',
-    es_host='elasticsearch.elastic-system.svc.cluster.local',
+    es_host='elasticsearch.elastic-system.svc.cluster.local:9200',
     force_restart=False,
     train_init_date='20170801',
     train_end_date='20170801',
@@ -56,3 +56,14 @@ def build_lambdamart_pipeline(
         validation_init_date=train_init_date,
         validation_end_date=train_end_date
     ).set_display_name('Build Validation Dataset of Train Data.').after(prepare_op)
+
+    component_path = main_path / 'data' / 'train' / 'component.yaml'
+    train_op_ = components.load_component_from_file(str(component_path))
+    train_op_ = update_op_project_id_img(train_op_)
+
+    _ = train_op_(
+        bucket=bucket,
+        train_init_date=train_init_date,
+        train_end_date=train_end_date,
+        es_host=es_host
+    ).set_display_name('Build Train RankLib Dataset.').after(prepare_op)
