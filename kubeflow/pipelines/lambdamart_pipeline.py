@@ -65,5 +65,6 @@ def build_lambdamart_pipeline(
         bucket=bucket,
         train_init_date=train_init_date,
         train_end_date=train_end_date,
-        es_host=es_host
+        es_host=es_host,
+        model_name=model_name
     ).set_display_name('Build Train RankLib Dataset.').after(prepare_op)

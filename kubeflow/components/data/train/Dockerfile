@@ -8,4 +8,4 @@ ENV GOOGLE_APPLICATION_CREDENTIALS=./key.json
 
 RUN pip install -r requirements.txt
 
-CMD ["python", "build_file.py"]
+CMD ["python", "run.py"]
