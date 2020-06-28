@@ -1,7 +1,7 @@
 #!/bin/sh
 
 #HOST=$(kubectl describe configmap inverse-proxy-config -n kubeflow | grep googleusercontent.com)
-HOST="127.0.0.1:7070/pipeline"
+HOST="127.0.0.1:7067/pipeline"
 
 # Means Proxy is still being created
 if [ -z "$HOST" ]; then
