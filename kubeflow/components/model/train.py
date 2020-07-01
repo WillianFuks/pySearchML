@@ -24,14 +24,14 @@ if __name__ == '__main__':
         help='Path where RankLib training file data is located.'
     )
     parser.add_argument(
-         '--validation_regular_file_path',
-         dest='validation_regular_file_path',
+         '--validation_files_path',
+         dest='validation_files_path',
          type=str,
          help='Path where validation data path is located.'
     )
     parser.add_argument(
-         '--validation_train_file_path',
-         dest='validation_train_file_path',
+         '--validation_train_files_path',
+         dest='validation_train_files_path',
          type=str,
          help='Path where validation train data path is located.'
     )

@@ -3,6 +3,7 @@ import argparse
 import json
 import uuid
 import pathlib
+from typing import Dict, List, Any
 
 import launch_crd
 from kubernetes import client as k8s_client
@@ -10,6 +11,21 @@ from kubernetes import config
 
 
 PATH = pathlib.Path(__file__).parent
+
+
+def get_ranker_parameters(ranker: str) -> List[Dict[str, Any]]:
+    return {
+        'lambdamart': [
+            {
+                "name": "--x",
+                "parameterType": "double",
+                "feasibleSpace": {
+                    "min": "0.01",
+                    "max": "3.03"
+                }
+            }
+        ]
+    }.get(ranker)
 
 
 class Experiment(launch_crd.K8sCR):
@@ -39,13 +55,6 @@ def main(argv=None):
         dest='destination',
         type=str,
         help='The file which stores the best trial of the experiment.'
-    )
-    parser.add_argument(
-        '--parameters',
-        dest='parameters',
-        type=list,
-        help=('List of Dict containing the definition of each parameter to be '
-              'used for each Ranker.')
     )
     parser.add_argument(
         '--train_file_path',
@@ -87,7 +96,7 @@ def main(argv=None):
     args = parser.parse_args()
 
     exp_json_file = PATH / 'experiment.json'
-    exp_def = json.loads(open(str(exp_json_file).read()))
+    exp_def = json.loads(open(str(exp_json_file)).read())
 
     raw_template = exp_def['spec']['trialTemplate']['goTemplate']['rawTemplate']
     raw_template = raw_template.format(
@@ -104,7 +113,7 @@ def main(argv=None):
     print('raw template: ', raw_template)
 
     exp_def['spec']['trialTemplate']['goTemplate']['rawTemplate'] = raw_template
-    exp_def['spec']['parameters'] = args.parameters
+    exp_def['spec']['parameters'] = get_ranker_parameters(args.ranker)
 
     config.load_incluster_config()
     api_client = k8s_client.ApiClient()
@@ -116,7 +125,8 @@ def main(argv=None):
     print('create response: ', create_response)
 
     expected_conditions = ["Succeeded", "Failed"]
-    current_exp = experiment.wait_for_condition(exp_name, expected_conditions)
+    current_exp = experiment.wait_for_condition('kubeflow', exp_name,
+                                                expected_conditions)
     expected, conditon = experiment.is_expected_conditions(current_exp, ["Succeeded"])
 
     if expected:

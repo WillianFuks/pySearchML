@@ -3,3 +3,4 @@ google-cloud-storage
 elasticsearch
 numpy
 requests
+kubernetes

@@ -1,5 +1,4 @@
 import pathlib
-from typing import Dict, List, Any
 
 from kfp import components, dsl
 from helper import update_op_project_id_img
@@ -8,27 +7,12 @@ from helper import update_op_project_id_img
 PATH = pathlib.Path(__file__).parent
 
 
-def get_ranker_parameters(ranker: str) -> List[Dict[str, Any]]:
-    return {
-        'lambdamart': [
-            {
-                "name": "--x",
-                "parameterType": "double",
-                "feasibleSpace": {
-                    "min": "0.01",
-                    "max": "3.03"
-                }
-            }
-        ]
-    }.get(ranker)
-
-
 @dsl.pipeline(
     name='Train Lambda Mart Pipeline',
     description=('Responsible for generating all datasets and optimization process for'
                  ' the chosen Ranker algorithm.')
 )
-def build_lambdamart_pipeline(
+def build_pipeline(
     bucket='pysearchml',
     es_host='elasticsearch.elastic-system.svc.cluster.local:9200',
     force_restart=False,
@@ -74,8 +58,8 @@ def build_lambdamart_pipeline(
         validation_end_date=train_end_date
     ).set_display_name('Build Validation Dataset of Train Data.').after(prepare_op)
 
-    data_component_path = components_path / 'data' / 'train' / 'component.yaml'
-    train_op_ = components.load_component_from_file(str(data_component_path))
+    component_path = components_path / 'data' / 'train' / 'component.yaml'
+    train_op_ = components.load_component_from_file(str(component_path))
     train_op_ = update_op_project_id_img(train_op_)
 
     train_op = train_op_(
@@ -86,18 +70,21 @@ def build_lambdamart_pipeline(
         model_name=model_name
     ).set_display_name('Build Train RankLib Dataset.').after(prepare_op)
 
-    model_component_path = component_path / 'model' / 'component.yaml'
-    model_op_ = components.load_component_from_file(str(model_component_path))
+    component_path = components_path / 'model' / 'component.yaml'
+    model_op_ = components.load_component_from_file(str(component_path))
+    model_op_ = update_op_project_id_img(model_op_)
 
     model_op = model_op_(
         name='lambdamart',
-        parameters=get_ranker_parameters(ranker),
         train_file_path=train_op.outputs['destination'],
         validation_files_path=val_reg_op.outputs['destination'],
         validation_train_files_path=val_train_op.outputs['destination'],
-    ).set_display_name('Launch Katib Optimization').after(
-        [val_reg_op, val_train_op, train_op]
-    )
+        es_host=es_host,
+        model_name=model_name,
+        ranker=ranker
+    ).set_display_name('Launch Katib Optimization').after(val_reg_op,
+                                                          val_train_op,
+                                                          train_op)
 
     _ = dsl.ContainerOp(
         name="my-out-cop",

@@ -1,6 +1,7 @@
 FROM python:3.7.7-slim as python
 
 COPY kubeflow/components/model /model
+COPY kubeflow/components/common/launch_crd.py /model/launch_crd.py
 WORKDIR /model
 COPY ./key.json .
 

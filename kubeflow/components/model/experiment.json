@@ -27,6 +27,7 @@
     "trialTemplate": {
       "goTemplate": {
         "rawTemplate": "apiVersion: batch/v1\nkind: Job\nmetadata:\n  name: {{.Trial}}\n  namespace: {{.NameSpace}}\nspec:\n  template:\n    spec:\n      containers:\n      - name: {{.Trial}}\n        image: gcr.io/{PROJECT_ID}/model_train\n        command:\n        - \"python\"\n        - \"/model/train.py\"\n        - \"--train_file_path={train_file_path}\"\n     - \"--validation_files_path={validation_files_path}\"\n        - \"--validation_train_files_path={validation_train_files_path}\"\n  - \"--es_host={es_host}\"\n     - \"--destination={destination}\"\n     - \"--model_name={model_name}\"\n     - \"--ranker={ranker}\"\n        {{- with .HyperParameters}}\n        {{- range .}}\n        - \"{{.Name}}={{.Value}}\"\n        {{- end}}\n        {{- end}}\n      restartPolicy: Never"
+      }
     }
   }
 }
