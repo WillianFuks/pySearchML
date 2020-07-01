@@ -7,7 +7,7 @@ inputs:
   - {name: bucket, type: String}
 
 outputs:
-  - {name: validation_data, type: LocalPath, description: 'Path where validation dataset is located.'}
+  - {name: destination, type: LocalPath, description: 'Path where validation dataset is located.'}
 
 implementation:
   container:
@@ -16,5 +16,5 @@ implementation:
       --validation_init_date, {inputValue: validation_init_date},
       --validation_end_date, {inputValue: validation_end_date},
       --bucket, {inputValue: bucket},
-      --destination, {outputPath: validation_data}
+      --destination, {outputPath: destination}
     ]

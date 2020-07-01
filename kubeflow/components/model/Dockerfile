@@ -1,0 +1,14 @@
+FROM python:3.7.7-slim as python
+
+COPY kubeflow/components/model /model
+WORKDIR /model
+COPY ./key.json .
+
+ARG PROJECT_ID
+
+ENV GOOGLE_APPLICATION_CREDENTIALS=key.json
+ENV PROJECT_ID=$PROJECT_ID
+
+RUN pip install -r requirements.txt
+
+ENTRYPOINT ["sh", "-c"]

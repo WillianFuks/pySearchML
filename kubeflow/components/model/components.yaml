@@ -1,0 +1,27 @@
+name: Run Kabit Optimization
+inputs:
+- {name: name, type: String, description: 'Experiment name.'}
+- {name: es_host, type: String, description: 'Hostname where Elasticsearch is responding.'}
+- {name: model_name, type: String, description: 'Featureset Store name as saved in Elasticsearch.'}
+- {name: ranker, type: String, description: 'Name of RankLib algorithm to use.'}
+- {name: train_file_path, type: String, description: 'Location where training data is located.'}
+- {name: validation_files_path, type: String, description: 'Location where regular validation data is located.'}
+- {name: validation_train_files_path, type: String, description: 'Location where validation for training data is located.'}
+- {name: parameters, type: JSON, description: 'Experiment Parameter configuration. Each Ranker has its own set of parameters.'}
+outputs:
+- {name: destination, type: JSON, description: 'Best Optimized Parameters.'}
+implementation:
+  container:
+    image: gcr.io/{PROJECT_ID}/model
+    command: [python, /model/launch_katib.py]
+    args: [
+      --name, {inputValue: name},
+      --parameters, {inputValue: parameters},
+      --destination, {outputPath: destination},
+      --train_files_path, {inputValue: train_files_path},
+      --validation_files_path, {inputValue: validation_files_path},
+      --validation_train_files_path, {inputValue: validation_train_files_path}
+      --es_host, {inputValue: es_host}
+      --model_name, {inputValue: model_name}
+      --ranker, {inputValue: ranker}
+    ]

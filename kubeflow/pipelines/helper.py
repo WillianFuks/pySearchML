@@ -28,22 +28,22 @@ def get_pipe_by_name(client, name):
     return pipeline
 
 
-def deploy_pipeline(ranker, host, version):
+def deploy_pipeline(host, version):
     client = kfp.Client(host=host)
-    name = f'pysearchml_{ranker}_{version}'
+    name = f'pysearchml_{version}'
     # Supposed page_token is not necessary for this application
 
     pipeline = get_pipe_by_name(client, name)
     if not pipeline:
         pipeline = client.upload_pipeline(
-            pipeline_package_path=f'{ranker}_pipeline.tar.gz',
+            pipeline_package_path='pipeline.tar.gz',
             pipeline_name=name
         )
 
 
-def run_experiment(ranker, host, version, experiment_name):
+def run_experiment(host, version, experiment_name):
     client = kfp.Client(host=host)
-    name = f'pysearchml_{ranker}_{version}'
+    name = f'pysearchml_{version}'
     pipeline = get_pipe_by_name(client, name)
     if not pipeline:
         raise Exception('Please first create a pipeline before running')
@@ -54,11 +54,10 @@ def run_experiment(ranker, host, version, experiment_name):
                         pipeline_id=pipeline.id)
 
 
-def main(action, host, ranker='lambdamart', **kwargs):
-    """`ranker` is one of the algorithms available in RankLib."""
+def main(action, host,  **kwargs):
     if action == 'deploy-pipeline':
         version = kwargs.get('version')
-        deploy_pipeline(ranker, host, version)
+        deploy_pipeline(host, version)
     elif action == 'run-pipeline':
         experiment_name = kwargs['experiment_name']
         run_experiment(experiment_name)
