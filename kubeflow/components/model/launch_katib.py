@@ -99,26 +99,27 @@ def main(argv=None):
     exp_def = json.loads(open(str(exp_json_file)).read())
 
     raw_template = exp_def['spec']['trialTemplate']['goTemplate']['rawTemplate']
-    raw_template = raw_template.format(
-        PROJECT_ID=os.getenv('PROJECT_ID'),
-        train_file_path=args.train_file_path,
-        validation_files_path=args.validation_files_path,
-        validation_train_files_path=args.validation_train_files_path,
-        es_host=args.es_host,
-        destination=args.destination,
-        model_name=args.model_name,
-        ranker=args.ranker
-    )
+    raw_template = raw_template.replace('{PROJECT_ID}', os.getenv('PROJECT_ID'))\
+        .replace('{train_file_path}', args.train_file_path)\
+        .replace('{validation_files_path}', args.validation_files_path)\
+        .replace('{validation_train_files_path}', args.validation_train_files_path)\
+        .replace('{es_host}', args.es_host)\
+        .replace('{destination}', args.destination)\
+        .replace('{model_name}', args.model_name)\
+        .replace('{ranker}', args.ranker)
 
     print('raw template: ', raw_template)
-
-    exp_def['spec']['trialTemplate']['goTemplate']['rawTemplate'] = raw_template
-    exp_def['spec']['parameters'] = get_ranker_parameters(args.ranker)
 
     config.load_incluster_config()
     api_client = k8s_client.ApiClient()
     experiment = Experiment(client=api_client)
     exp_name = f'{args.name}-{uuid.uuid4().hex}'
+
+    exp_def['spec']['trialTemplate']['goTemplate']['rawTemplate'] = raw_template
+    exp_def['spec']['parameters'] = get_ranker_parameters(args.ranker)
+    exp_def['metadata']['name'] = exp_name
+
+    print('this is exp_def: ', json.dumps(exp_def))
 
     create_response = experiment.create(exp_def)
 
@@ -128,6 +129,8 @@ def main(argv=None):
     current_exp = experiment.wait_for_condition('kubeflow', exp_name,
                                                 expected_conditions)
     expected, conditon = experiment.is_expected_conditions(current_exp, ["Succeeded"])
+
+    print('THIS IS CURRENT_EXP: ', current_exp)
 
     if expected:
         params = current_exp["status"]["currentOptimalTrial"]["parameterAssignments"]

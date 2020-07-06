@@ -19,7 +19,6 @@ https://github.com/kubeflow/pipelines/blob/848fbe0bceb786c8db72e88b3bc986d42ac76
 """
 
 import datetime
-import logging
 import time
 
 from kubernetes import client as k8s_client
@@ -58,8 +57,8 @@ class K8sCR(object):
         results = self.client.get_namespaced_custom_object(
           self.group, self.version, namespace, self.plural, name)
       except Exception as e:
-        logging.error("There was a problem waiting for %s/%s %s in namespace %s; Exception: %s",
-                       self.group, self.plural, name, namespace, e)
+        print("There was a problem waiting for %s/%s %s in namespace %s; Exception: %s" %(
+                       self.group, self.plural, name, namespace, e))
         raise
 
       if results:
@@ -67,13 +66,13 @@ class K8sCR(object):
           status_callback(results)
         expected, condition = self.is_expected_conditions(results, expected_conditions)
         if expected:
-          logging.info("%s/%s %s in namespace %s has reached the expected condition: %s.",
-                       self.group, self.plural, name, namespace, condition)
+          print("%s/%s %s in namespace %s has reached the expected condition: %s." %(
+                       self.group, self.plural, name, namespace, condition))
           return results
         else:
           if condition:
-            logging.info("Current condition of %s/%s %s in namespace %s is %s.",
-                  self.group, self.plural, name, namespace, condition)
+            print("Current condition of %s/%s %s in namespace %s is %s." %(
+                  self.group, self.plural, name, namespace, condition))
 
       if datetime.datetime.now() + polling_interval > end_time:
         raise Exception(
@@ -93,12 +92,12 @@ class K8sCR(object):
     try:
       # Create a Resource
       namespace = spec["metadata"].get("namespace", "default")
-      logging.info("Creating %s/%s %s in namespace %s.",
-        self.group, self.plural, spec["metadata"]["name"], namespace)
+      print("Creating %s/%s %s in namespace %s." %(
+        self.group, self.plural, spec["metadata"]["name"], namespace))
       api_response = self.client.create_namespaced_custom_object(
         self.group, self.version, namespace, self.plural, spec)
-      logging.info("Created %s/%s %s in namespace %s.",
-        self.group, self.plural, spec["metadata"]["name"], namespace)
+      print("Created %s/%s %s in namespace %s." %(
+        self.group, self.plural, spec["metadata"]["name"], namespace))
       return api_response
     except rest.ApiException as e:
       print(str(e))
@@ -109,8 +108,8 @@ class K8sCR(object):
         # owned references are deleted.
         "propagationPolicy": "Foreground",
       }
-      logging.info("Deleteing %s/%s %s in namespace %s.",
-        self.group, self.plural, name, namespace)
+      print("Deleteing %s/%s %s in namespace %s." %(
+        self.group, self.plural, name, namespace))
       api_response = self.client.delete_namespaced_custom_object(
         self.group,
         self.version,
@@ -118,11 +117,11 @@ class K8sCR(object):
         self.plural,
         name,
         body)
-      logging.info("Deleted %s/%s %s in namespace %s.",
-        self.group, self.plural, name, namespace)
+      print("Deleted %s/%s %s in namespace %s." %(
+        self.group, self.plural, name, namespace))
       return api_response
     except rest.ApiException as e:
       print(str(e))
 
-    logging.error("Exception when %s %s/%s: %s", action, self.group, self.plural, ex.body)
+    print("Exception when %s %s/%s: %s" %(action, self.group, self.plural, ex.body))
     raise ex

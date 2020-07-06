@@ -3,10 +3,10 @@
   "kind": "Experiment",
   "metadata": {
     "namespace": "kubeflow",
+    "name": "",
     "labels": {
       "controller-tools.k8s.io": "1.0"
-    },
-    "name": "bayesianoptimization-example"
+    }
   },
   "spec": {
     "objective": {
