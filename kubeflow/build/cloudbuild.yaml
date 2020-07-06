@@ -58,6 +58,9 @@ steps:
     - 'CLUSTER_NAME=${_CLUSTER_NAME}'
     - 'COMPUTE_ZONE=${_COMPUTE_ZONE}'
   id: 'Build KFP Cluster'
+  volumes:
+  - name: 'ssh'
+    path: /root/.ssh
 
 # Build Docker Images
 - name: 'gcr.io/cloud-builders/docker'
@@ -77,6 +80,7 @@ steps:
       docker push gcr.io/$PROJECT_ID/model
   dir: 'pySearchML'
   id: 'Build Docker Images'
+  waitFor: ['Clone Git Repo']
 
 # Compile Ranker Pipeline
 - name: 'gcr.io/$PROJECT_ID/pipelines'
@@ -88,6 +92,7 @@ steps:
   env:
     - 'PROJECT_ID=$PROJECT_ID'
   id: 'Compile Pipeline'
+  waitFor: ['Clone Git Repo']
 
 # Upload Pipeline tar.gz to GCS
 #- name: 'gcr.io/cloud-builders/gsutil'
