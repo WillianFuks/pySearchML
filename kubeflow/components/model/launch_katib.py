@@ -98,7 +98,9 @@ def main(argv=None):
     exp_json_file = PATH / 'experiment.json'
     exp_def = json.loads(open(str(exp_json_file)).read())
 
-    raw_template = exp_def['spec']['trialTemplate']['goTemplate']['rawTemplate']
+    raw_template = json.dumps(
+        exp_def['spec']['trialTemplate']['goTemplate']['rawTemplate']
+    )
     raw_template = raw_template.replace('{PROJECT_ID}', os.getenv('PROJECT_ID'))\
         .replace('{train_file_path}', args.train_file_path)\
         .replace('{validation_files_path}', args.validation_files_path)\
@@ -108,14 +110,15 @@ def main(argv=None):
         .replace('{model_name}', args.model_name)\
         .replace('{ranker}', args.ranker)
 
-    print('raw template: ', raw_template)
+    exp_def['spec']['trialTemplate']['goTemplate']['rawTemplate'] = raw_template
+
+    print(exp_def)
 
     config.load_incluster_config()
     api_client = k8s_client.ApiClient()
     experiment = Experiment(client=api_client)
     exp_name = f'{args.name}-{uuid.uuid4().hex}'
 
-    exp_def['spec']['trialTemplate']['goTemplate']['rawTemplate'] = raw_template
     exp_def['spec']['parameters'] = get_ranker_parameters(args.ranker)
     exp_def['metadata']['name'] = exp_name
 
