@@ -7,12 +7,12 @@ import numpy as np
 
 def ltr_f_x(x: float) -> float:
     # e ^ -(x - 2) ^ 2 + e ^ -((x - 6) ^ 2 / 10) + 1 / (x ^ 2 + 1)
-    (0, np.exp(-(x - 2) ** 2) + np.exp(-(x - 6) ** 2 / 10) + 1 / (x ** 2 + 1))
+    return np.exp(-(x - 2) ** 2) + np.exp(-(x - 6) ** 2 / 10) + 1 / (x ** 2 + 1)
 
 
 def main(args: NamedTuple):
     y = ltr_f_x(args.x)
-    print(f'rank={y}')
+    print(f'Validation-rank={y}')
 
 
 if __name__ == '__main__':
@@ -67,7 +67,15 @@ if __name__ == '__main__':
         type=str,
         help='Name of featureset store as saved in Elasticsearch.'
     )
+    parser.add_argument(
+        '--x',
+        dest='x',
+        type=float,
+        help='X.'
+    )
 
     print(sys.argv[1:])
-    args, _ = parser.parse_known_args(sys.argv[1:])
+    args, unknown = parser.parse_known_args(sys.argv[1:])
+    print('VAL REG: ', open(args.validation_files_path).readline())
+    print('VAL TRAIN: ', open(args.validation_train_files_path).readline())
     main(args)

@@ -101,7 +101,8 @@ def main(argv=None):
     raw_template = json.dumps(
         exp_def['spec']['trialTemplate']['goTemplate']['rawTemplate']
     )
-    raw_template = raw_template.replace('{PROJECT_ID}', os.getenv('PROJECT_ID'))\
+    raw_template = raw_template\
+        .replace('{PROJECT_ID}', os.getenv('PROJECT_ID'))\
         .replace('{train_file_path}', args.train_file_path)\
         .replace('{validation_files_path}', args.validation_files_path)\
         .replace('{validation_train_files_path}', args.validation_train_files_path)\
@@ -112,12 +113,10 @@ def main(argv=None):
 
     exp_def['spec']['trialTemplate']['goTemplate']['rawTemplate'] = raw_template
 
-    print(exp_def)
-
     config.load_incluster_config()
     api_client = k8s_client.ApiClient()
     experiment = Experiment(client=api_client)
-    exp_name = f'{args.name}-{uuid.uuid4().hex}'
+    exp_name = f'{args.name}-{uuid.uuid4().hex}'[:33]
 
     exp_def['spec']['parameters'] = get_ranker_parameters(args.ranker)
     exp_def['metadata']['name'] = exp_name
@@ -138,10 +137,9 @@ def main(argv=None):
     if expected:
         params = current_exp["status"]["currentOptimalTrial"]["parameterAssignments"]
         print(params)
-        # if not os.path.exists(os.path.dirname(args.outputFile)):
-        #    # os.makedirs(os.path.dirname(args.outputFile))
-        # with open(args.outputFile, 'w') as f:
-        #     f.write(json.dumps(paramAssignments))
+        os.makedirs(os.path.dirname(args.destination), exist_ok=True)
+        with open(args.destination, 'w') as f:
+            f.write(json.dumps(params))
 
 
 if __name__ == "__main__":
