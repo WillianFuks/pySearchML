@@ -31,6 +31,8 @@ if [ $CLUSTER_EXISTS = false ]; then
     kubectl apply -k "github.com/kubeflow/pipelines/manifests/kustomize/cluster-scoped-resources?ref=$PIPELINE_VERSION"
     kubectl wait --for condition=established --timeout=60s crd/applications.app.k8s.io
     kubectl apply -k "github.com/kubeflow/pipelines/manifests/kustomize/env/platform-agnostic/?ref=$PIPELINE_VERSION"
+    # this step can take a while
+    kubectl wait applications/pipeline -n kubeflow --for condition=Ready --timeout=1800s
     # Update namespace to contain metric collector label
     kubectl apply -f kubeflow/namespace.yaml
 
@@ -40,10 +42,8 @@ if [ $CLUSTER_EXISTS = false ]; then
     kubectl apply -f kubeflow/nfs-server.yaml
     kubectl apply -f kubeflow/nfs-server-service.yaml
     CLUSTER_IP=$(kubectl -n kubeflow get services nfs-server -o=jsonpath='{.spec.clusterIP}')
-    add-apt-repository ppa:rmescandon/yq
-    apt update
-    apt install yq -y
-    yq w -d0 kubeflow/pv-pvc.yaml 'spec.nfs.server' ${CLUSTER_IP} | kubectl apply -f -
+    sed '0,/^\([[:space:]]*server: *\).*/s//\1${CLUSTER_IP}/;' kubeflow/pv-pvc.yaml | kubectl apply -f -
+    #yq w -d0 kubeflow/pv-pvc.yaml 'spec.nfs.server' ${CLUSTER_IP} | kubectl apply -f -
 
     # Install Kustomize
     curl -s "https://raw.githubusercontent.com/kubernetes-sigs/kustomize/master/hack/install_kustomize.sh"  | bash
