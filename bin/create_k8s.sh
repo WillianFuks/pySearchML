@@ -20,7 +20,7 @@ if [ $CLUSTER_EXISTS = false ]; then
 	--scopes cloud-platform \
 	--machine-type n1-standard-2 \
 	--zone=$COMPUTE_ZONE \
-	--disk-size=40GB \
+	--disk-size=30GB \
 	--num-nodes=1
 
     gcloud components install kubectl
@@ -33,6 +33,7 @@ if [ $CLUSTER_EXISTS = false ]; then
     kubectl apply -k "github.com/kubeflow/pipelines/manifests/kustomize/env/platform-agnostic/?ref=$PIPELINE_VERSION"
     # Update namespace to contain metric collector label
     kubectl apply -f kubeflow/namespace.yaml
+    kubectl apply -f kubeflow/pvc.yaml
 
     # Install Kustomize
     curl -s "https://raw.githubusercontent.com/kubernetes-sigs/kustomize/master/hack/install_kustomize.sh"  | bash

@@ -4,6 +4,7 @@ import json
 import uuid
 import pathlib
 from typing import Dict, List, Any
+from time import sleep
 
 import launch_crd
 from kubernetes import client as k8s_client
@@ -130,9 +131,13 @@ def main(argv=None):
     expected_conditions = ["Succeeded", "Failed"]
     current_exp = experiment.wait_for_condition('kubeflow', exp_name,
                                                 expected_conditions)
-    expected, conditon = experiment.is_expected_conditions(current_exp, ["Succeeded"])
+    expected, _ = experiment.is_expected_conditions(current_exp, ["Succeeded"])
 
     print('THIS IS CURRENT_EXP: ', current_exp)
+
+    while True:
+        print('sleeeep')
+        sleep(10)
 
     if expected:
         params = current_exp["status"]["currentOptimalTrial"]["parameterAssignments"]

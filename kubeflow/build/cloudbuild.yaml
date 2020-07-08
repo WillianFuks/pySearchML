@@ -120,9 +120,9 @@ steps:
     - |
       gcloud components install kubectl
       gcloud container clusters get-credentials pysearchml --zone=$_COMPUTE_ZONE
-      kubectl port-forward -n kubeflow svc/ml-pipeline-ui 7067:80 &
-      # Wait for Pods to be Ready
+      # Wait for Pods to be Ready before Forwarding
       sleep 60s
+      kubectl port-forward -n kubeflow svc/ml-pipeline-ui 7067:80 &
       python helper.py deploy-pipeline --host=$(cat /workspace/k8_host.txt) --version=${_VERSION}
   dir: 'pySearchML/kubeflow/pipelines/'
   id:  'Deploy Pipeline'
