@@ -26,15 +26,6 @@ if [ $CLUSTER_EXISTS = false ]; then
     gcloud components install kubectl
     gcloud container clusters get-credentials $CLUSTER_NAME --zone=$COMPUTE_ZONE
 
-    # Install NFS
-    # https://medium.com/platformer-blog/nfs-persistent-volumes-with-kubernetes-a-case-study-ce1ed6e2c266
-    gcloud compute disks create --size=10GB --zone=${COMPUTE_ZONE} pysearchml-nfs-disk
-    kubectl apply -f kubeflow/nfs-server.yaml
-    kubectl apply -f kubeflow/nfs-server-service.yaml
-    CLUSTER_IP=$(kubectl -n kubeflow get services nfs-server -o=jsonpath='{.spec.clusterIP}')
-    snap install yq
-    yq w -d0 kubeflow/pv-pvc.yaml 'spec.nfs.server' ${CLUSTER_IP} | kubectl apply -f -
-
     # Install Kubeflow Pipelines
     export PIPELINE_VERSION=0.5.1
     kubectl apply -k "github.com/kubeflow/pipelines/manifests/kustomize/cluster-scoped-resources?ref=$PIPELINE_VERSION"
@@ -42,6 +33,17 @@ if [ $CLUSTER_EXISTS = false ]; then
     kubectl apply -k "github.com/kubeflow/pipelines/manifests/kustomize/env/platform-agnostic/?ref=$PIPELINE_VERSION"
     # Update namespace to contain metric collector label
     kubectl apply -f kubeflow/namespace.yaml
+
+    # Install NFS in Kubeflow Namespace
+    # https://medium.com/platformer-blog/nfs-persistent-volumes-with-kubernetes-a-case-study-ce1ed6e2c266
+    gcloud compute disks create --size=10GB --zone=${COMPUTE_ZONE} pysearchml-nfs-disk
+    kubectl apply -f kubeflow/nfs-server.yaml
+    kubectl apply -f kubeflow/nfs-server-service.yaml
+    CLUSTER_IP=$(kubectl -n kubeflow get services nfs-server -o=jsonpath='{.spec.clusterIP}')
+    add-apt-repository ppa:rmescandon/yq
+    apt update
+    apt install yq -y
+    yq w -d0 kubeflow/pv-pvc.yaml 'spec.nfs.server' ${CLUSTER_IP} | kubectl apply -f -
 
     # Install Kustomize
     curl -s "https://raw.githubusercontent.com/kubernetes-sigs/kustomize/master/hack/install_kustomize.sh"  | bash
