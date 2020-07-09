@@ -146,8 +146,10 @@ def main(argv=None):
             os.remove(args.destination)
 
         print(glob('/data/*'))
-        with open('/data/test.txt', 'w') as f:
+        with open('test.txt', 'w') as f:
             f.write('test')
+        from shutil import copyfile
+        copyfile('./test.txt', '/data/test.txt')
         with open(args.destination, 'w') as f:
             f.write(json.dumps(params))
         print(open(args.destination).read())
