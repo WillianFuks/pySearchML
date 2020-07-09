@@ -53,7 +53,7 @@
                     "volumeMounts": [
                       {
                         "mountPath": "/data",
-                        "name": "pysearchml",
+                        "name": "pysearchmlpvc",
                         "readOnly": false
                       }
                     ]
@@ -61,9 +61,9 @@
                 ],
                 "volumes": [
                   {
-                    "name": "pysearchml",
+                    "name": "pysearchmlpvc",
                     "persistentVolumeClaim": {
-                      "claimName": "pysearchml-pvc",
+                      "claimName": "pysearchml-nfs",
                       "readOnly": false
                     }
                   }

@@ -25,7 +25,7 @@ def build_pipeline(
     ranker='lambdamart'
 ):
 
-    pvc = dsl.PipelineVolume(pvc='pysearchml-pvc')
+    pvc = dsl.PipelineVolume(pvc='pysearchml-nfs')
 
     prepare_op = dsl.ContainerOp(
         name='prepare env',
