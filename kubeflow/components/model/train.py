@@ -73,10 +73,7 @@ if __name__ == '__main__':
         type=float,
         help='X.'
     )
-    from glob import glob
 
     print(sys.argv[1:])
     args, unknown = parser.parse_known_args(sys.argv[1:])
-    print('VAL REG: ', glob(args.validation_files_path + '/*'))
-    print('TRAIN DATASET: ', open(args.train_file_path).readline())
     main(args)

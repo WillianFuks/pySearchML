@@ -13,8 +13,8 @@ spec:
     path: "/"
 
 ---
-kind: PersistentVolumeClaim
 apiVersion: v1
+kind: PersistentVolumeClaim
 metadata:
   name: pysearchml-nfs
   namespace: kubeflow

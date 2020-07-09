@@ -4,11 +4,13 @@ import json
 import uuid
 import pathlib
 from typing import Dict, List, Any
-from time import sleep
 
 import launch_crd
 from kubernetes import client as k8s_client
 from kubernetes import config
+
+
+# https://github.com/kubeflow/pipelines/tree/de2e0f2ec0edc1afd16ad79d8cd9719d1b01cb1f/components/kubeflow/katib-launcher
 
 
 PATH = pathlib.Path(__file__).parent
@@ -134,17 +136,21 @@ def main(argv=None):
     expected, _ = experiment.is_expected_conditions(current_exp, ["Succeeded"])
 
     print('THIS IS CURRENT_EXP: ', current_exp)
-
-    while True:
-        print('sleeeep')
-        sleep(10)
+    from glob import glob
 
     if expected:
         params = current_exp["status"]["currentOptimalTrial"]["parameterAssignments"]
-        print(params)
+        print(json.dumps(params))
         os.makedirs(os.path.dirname(args.destination), exist_ok=True)
+        if os.path.isfile(args.destination):
+            os.remove(args.destination)
+
+        print(glob('/data/*'))
+        with open('/data/test.txt', 'w') as f:
+            f.write('test')
         with open(args.destination, 'w') as f:
             f.write(json.dumps(params))
+        print(open(args.destination).read())
 
 
 if __name__ == "__main__":

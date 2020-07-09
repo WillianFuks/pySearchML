@@ -77,7 +77,7 @@ def build_pipeline(
         pvolumes={'/data': pvc}
     ).set_display_name('Build Training Dataset').after(prepare_op)
 
-    _ = dsl.ContainerOp(
+    katib_op = dsl.ContainerOp(
         name='pySearchML Bayesian Optimization Model',
         image=f'gcr.io/{PROJECT_ID}/model',
         command=['python', '/model/launch_katib.py'],
@@ -89,29 +89,17 @@ def build_pipeline(
             '--train_file_path=/data/train/train_dataset.txt',
             '--validation_files_path=/data/validation_regular',
             '--validation_train_files_path=/data/validation_train',
-            '--destination=/data/model'
+            '--destination=/data/output.txt'
         ],
         pvolumes={'/data': pvc}
     ).set_display_name('Katib Optimization Process').after(val_reg_dataset_op,
                                                            val_train_dataset_op,
                                                            train_dataset_op)
 
-
-    # model_op = model_op_(
-        # name='lambdamart',
-        # train_file_path=train_op.outputs['destination'],
-        # validation_files_path=val_reg_op.outputs['destination'],
-        # validation_train_files_path=val_train_op.outputs['destination'],
-        # es_host=es_host,
-        # model_name=model_name,
-        # ranker=ranker
-    # ).set_display_name('Launch Katib Optimization').after(val_reg_op,
-                                                          # val_train_op,
-                                                          # train_op)
-
-  #   _ = dsl.ContainerOp(
-        # name="my-out-cop",
-        # image="library/bash:4.4.23",
-        # command=["sh", "-c"],
-        # arguments=["echo hyperparameter: %s" % model_op.output],
-  #   )
+    _ = dsl.ContainerOp(
+        name="my-out-cop",
+        image="library/bash:4.4.23",
+        command=["sh", "-c"],
+        arguments=['echo $(cat /data/output.txt)'],
+        pvolumes={'/data': pvc.after(katib_op)}
+    ).after(katib_op)

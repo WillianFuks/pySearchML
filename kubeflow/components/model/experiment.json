@@ -11,23 +11,16 @@
   "spec": {
     "objective": {
       "type": "maximize",
-      "goal": 0.0,
       "objectiveMetricName": "Validation-rank",
       "additionalMetricNames": [
         "rank"
       ]
     },
     "algorithm": {
-      "algorithmName": "bayesianoptimization",
-      "algorithmSettings": [
-        {
-          "name": "random_state",
-          "value": "10"
-        }
-      ]
+      "algorithmName": "bayesianoptimization"
     },
     "parallelTrialCount": 1,
-    "maxTrialCount": 1,
+    "maxTrialCount": 5,
     "maxFailedTrialCount": 1,
     "parameters": [],
     "trialTemplate": {

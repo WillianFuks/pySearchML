@@ -21,7 +21,7 @@ def main(validation_init_date, validation_end_date, bucket, destination):
 
     ds_ref = bq_client.dataset('pysearchml')
 
-    table_id = str(uuid.uuid4()).replace('-', '')
+    table_id = str(uuid.uuid4().hex)
     table_ref = ds_ref.table(table_id)
 
     # Query GA data
@@ -40,7 +40,7 @@ def main(validation_init_date, validation_end_date, bucket, destination):
     # export BigQuery table to GCS
     # bucket will be set in accordance to which validation dataset is referenced, i.e.,
     # whether regular validation or validation for the training dataset.
-    destination_uri = f"gs://{bucket.split('/')[0]}/validation*.gz"
+    destination_uri = f"gs://{bucket}/validation*.gz"
 
     extract_config = bigquery.ExtractJobConfig()
     extract_config.compression = 'GZIP'
