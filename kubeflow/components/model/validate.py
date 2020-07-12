@@ -18,20 +18,10 @@ trained RankLib model stored on Elasticsearch.
 def parse_args(args: List) -> NamedTuple:
     parser = argparse.ArgumentParser()
     parser.add_argument(
-        '--path',
-        dest='path',
+        '--files_path',
+        dest='files_path',
         type=str,
         help='Path to files containing data of customers searches and their purchases'
-    )
-    parser.add_argument(
-        '--es_query_path',
-        dest='es_query_path',
-        type=str,
-        help=('When validating the trained RankLib model, several distinct queries can '
-              'be evaluated. For instance, one query may be a straightforward usage of '
-              'the BM25F algorithm whereas another query might use boost factors on '
-              'specific fields. The input `es_query_path` lets a specific query be '
-              'selected for the validation process.')
     )
     parser.add_argument(
         '--index',
@@ -57,12 +47,19 @@ def parse_args(args: List) -> NamedTuple:
         '--es_batch',
         dest='es_batch',
         type=int,
+        default=1000,
         help='Determines how many items to send at once to Elasticsearch when using '
              'multisearch API.'
     )
 
 
-def validate_model(args: NamedTuple) -> None:
+def validate_model(
+    files_path: str,
+    es_host: str,
+    model_name: str,
+    index: str = 'pysearchml',
+    es_batch: int = 1000
+) -> float:
     """
     Reads through an input file of searches and customers purchases. For each search,
     sends the query against Elasticsearch to retrieve a list of documents. This list is
@@ -91,16 +88,19 @@ def validate_model(args: NamedTuple) -> None:
 
     Args
     ----
-      args: namedtuple
-          General input for running the script
+      files_path: str,
+      es_host: str,
+      model_name: str,
+      index: str = 'pysearchml',
+      es_batch: int = 1000
     """
     counter = 1
     search_arr, purchase_arr = [], []
     # Defined as lists which works as pointers
     rank_num, rank_den = [0], [0]
-    es_client = Elasticsearch(hosts=[args.es_host])
+    es_client = Elasticsearch(hosts=[es_host])
 
-    files = glob.glob(os.path.join(args.path, '*.gz'))
+    files = glob.glob(os.path.join(files_path, '*.gz'))
 
     for file_ in files:
         for row in gzip.GzipFile(file_):
@@ -108,10 +108,12 @@ def validate_model(args: NamedTuple) -> None:
             search_keys, docs = row['search_keys'], row['docs']
             purchase_arr.append(docs)
 
-            search_arr.append(json.dumps({'index': args.index}))
-            search_arr.append(json.dumps(get_es_query(search_keys, args)))
+            search_arr.append(json.dumps({'index': index}))
+            search_arr.append(
+                json.dumps(get_es_query(search_keys, model_name, es_batch))
+            )
 
-            if counter % args.es_batch == 0:
+            if counter % es_batch == 0:
                 compute_rank(search_arr, purchase_arr, rank_num, rank_den, es_client)
                 search_arr, purchase_arr = [], []
 
@@ -119,10 +121,9 @@ def validate_model(args: NamedTuple) -> None:
 
         if search_arr:
             compute_rank(search_arr, purchase_arr, rank_num, rank_den, es_client)
-
-        # return rank=100% if no document was retrieved from Elasticsearch and purchased
+        # return rank=50% if no document was retrieved from Elasticsearch and purchased
         # by customers.
-        return rank_num[0] / rank_den[0] if rank_den[0] else 1
+        return rank_num[0] / rank_den[0] if rank_den[0] else 0.5
 
 
 def compute_rank(
@@ -157,13 +158,8 @@ def compute_rank(
     request = os.linesep.join(search_arr)
     response = es_client.msearch(body=request, request_timeout=60)
 
-    print('response: ', response)
-    print('this is purchase_arr ', purchase_arr)
-
     for hit in response['responses']:
         docs = [doc['_id'] for doc in hit['hits'].get('hits', [])]
-
-        print('this is docs: ', docs)
 
         if not docs or len(docs) < 2:
             continue
@@ -174,18 +170,20 @@ def compute_rank(
         ranks = np.where(np.in1d(docs, purchased_docs))[0]
         idx += 1
 
-        print('this is ranks: ', ranks)
-
         if ranks.size == 0:
             continue
 
         rank_num[0] += ranks.sum() / (len(docs) - 1)
         rank_den[0] += ranks.size
 
+    print('rank num: ', rank_num[0])
+    print('rank den: ', rank_den[0])
+
 
 def get_es_query(
     search_keys: Dict[str, Any],
-    args: NamedTuple
+    model_name: str,
+    es_batch: int = 1000
 ) -> str:
     """
     Builds the Elasticsearch query to be used when retrieving data.
@@ -200,8 +198,6 @@ def get_es_query(
             Name of RankLib model saved on Elasticsearch
         args.index: str
             Index on Elasticsearch where to retrieve documents
-        args.es_query_path: str
-            Path where to locate the Elasticsearch query
         args.es_batch: int
             How many documents to retrieve
 
@@ -210,18 +206,26 @@ def get_es_query(
       query: str
           String representation of final query
     """
-    query = open(args.es_query_path).read()
-    query = json.loads(query.replace('{query}', search_keys['query']))
+    # it's expected that a ES query will be available at:
+    # ./queries/{model_name}/es_query.json
+    query = open(f'queries/{model_name}/es_query.json').read()
+    query = json.loads(query.replace('{query}', search_keys['search_term']))
     # We just want to retrieve the id of the document to evaluate the ranks between
     # customers purchases and the retrieve list result
     query['_source'] = '_id'
-    query['size'] = args.es_batch
-    query['rescore']['window_size'] = args.es_batch
+    query['size'] = es_batch
+    query['rescore']['window_size'] = 50  # Hardcoded to optimize first 50 skus
     query['rescore']['query']['rescore_query']['sltr']['params'] = search_keys
-    query['rescore']['query']['rescore_query']['sltr']['model'] = args.model_name
+    query['rescore']['query']['rescore_query']['sltr']['model'] = model_name
     return query
 
 
 if __name__ == '__main__':
     args = parse_args(sys.argv[1:])
-    validate_model(args)
+    validate_model(
+        args.files_path,
+        args.es_host,
+        args.model_name,
+        args.index,
+        args.es_batch
+    )

@@ -36,14 +36,14 @@ WITH search_data AS(
         COALESCE(PROCESS_CHANNEL_GROUP(channelGrouping), '') AS channel_group,
         ARRAY(
           SELECT AS STRUCT
-            page.pagepath AS query,
-            ARRAY_AGG(productSKU IGNORE NULLS) AS query_skus,
+            REGEXP_REPLACE(REGEXP_REPLACE(REGEXP_REPLACE(REGEXP_REPLACE(REGEXP_EXTRACT(page.pagepath, r'([^\/]+)$'), r'(\+)+', ' '), r't ', 't'), r' s ?', ' '), r'\.axd', '') AS query,
+            ARRAY_AGG(DISTINCT productSKU IGNORE NULLS) AS query_skus,
           FROM UNNEST(hits) LEFT JOIN UNNEST(product)
           WHERE productSKU != '(not set)'
-            AND NOT REGEXP_CONTAINS(page.pagepath, r'\.html')
+            AND NOT REGEXP_CONTAINS(page.pagepath, r'\.html|home') AND REGEXP_CONTAINS(page.pagepath, r'google\+redesign')
           GROUP BY query
         ) AS hits,
-        ARRAY(SELECT productSKU FROM UNNEST(hits), UNNEST(product) WHERE ecommerceAction.action_type = '6') AS purchased_skus
+        ARRAY(SELECT DISTINCT productSKU FROM UNNEST(hits), UNNEST(product) WHERE ecommerceAction.action_type = '6') AS purchased_skus
       FROM `bigquery-public-data.google_analytics_sample.ga_sessions*`
       WHERE TRUE
         AND REGEXP_EXTRACT(_TABLE_SUFFIX, r'.*_(\d+)$') BETWEEN '{validation_init_date}' AND '{validation_end_date}'
@@ -68,7 +68,7 @@ customer_data AS(
 
 SELECT
   STRUCT(
-    query,
+    query AS search_term,
     COALESCE(channel_group, '') AS channel_group,
     COALESCE(CAST(avg_ticket AS INT64), 0) AS customer_avg_ticket
   ) AS search_keys,

@@ -140,6 +140,8 @@ def build_train_file(
     queries_counter = [0]
     search_arr, judge_list = [], []
     os.makedirs(destination, exist_ok=True)
+    if os.path.isfile(f'{destination}/train_dataset.txt'):
+        os.remove(f'{destination}/train_dataset.txt')
 
     for search_keys, docs, judgments in read_judgment_files():
         judge_list.append(judgments)

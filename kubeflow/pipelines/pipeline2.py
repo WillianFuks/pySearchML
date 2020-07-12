@@ -17,14 +17,13 @@ def build_pipeline(
     bucket='pysearchml',
     es_host='elasticsearch.elastic-system.svc.cluster.local:9200',
     force_restart=False,
-    train_init_date='20170801',
-    train_end_date='20170801',
-    validation_init_date='20170802',
-    validation_end_date='20170802',
+    train_init_date='20160801',
+    train_end_date='20160801',
+    validation_init_date='20160802',
+    validation_end_date='20160802',
     model_name='lambdamart0',
     ranker='lambdamart'
 ):
-
     pvc = dsl.PipelineVolume(pvc='pysearchml-nfs')
 
     prepare_op = dsl.ContainerOp(
@@ -100,6 +99,6 @@ def build_pipeline(
         name="my-out-cop",
         image="library/bash:4.4.23",
         command=["sh", "-c"],
-        arguments=['echo $(cat /data/output.txt)'],
-        pvolumes={'/data': pvc.after(katib_op)}
+        arguments=['echo "this is it $(cat /data/output.txt)"'],
+        pvolumes={'/data': pvc}
     ).after(katib_op)

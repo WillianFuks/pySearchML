@@ -21,7 +21,7 @@ if [ $CLUSTER_EXISTS = false ]; then
 	--machine-type n1-standard-2 \
 	--zone=$COMPUTE_ZONE \
 	--disk-size=30GB \
-	--num-nodes=2
+	--num-nodes=1
 
     gcloud components install kubectl
     gcloud container clusters get-credentials $CLUSTER_NAME --zone=$COMPUTE_ZONE

@@ -8,7 +8,7 @@ WITH search_data AS(
     fv,
     ARRAY(
       SELECT AS STRUCT
-        query as search_term,
+        query,
         ARRAY(
           SELECT AS STRUCT
             doc, click, purchase FROM UNNEST(session_docs) WHERE IF(max_position IS NOT NULL, position <= max_position, TRUE) AND IF(click = 0, RAND() < 0.01, True)
@@ -53,14 +53,14 @@ WITH search_data AS(
           fullvisitorid as fv,
           ARRAY(
             SELECT AS STRUCT
-              page.pagepath AS query,
+              REGEXP_REPLACE(REGEXP_REPLACE(REGEXP_REPLACE(REGEXP_REPLACE(REGEXP_EXTRACT(page.pagepath, r'([^\/]+)$'), r'(\+)+', ' '), r't ', 't'), r' s ?', ' '), r'\.axd', '') AS query,
               productSKU AS doc,
               IF(isClick, 1, 0) AS click,
               ROW_NUMBER() OVER() AS position
             FROM UNNEST(hits) LEFT JOIN UNNEST(product)
             WHERE TRUE
               AND productSKU != '(not set)'
-              AND NOT REGEXP_CONTAINS(page.pagepath, r'\.html')
+              AND NOT REGEXP_CONTAINS(page.pagepath, r'\.html|home') AND REGEXP_CONTAINS(page.pagepath, r'google\+redesign')
 
           ) AS hits,
           ARRAY(SELECT productSKU FROM UNNEST(hits), UNNEST(product) WHERE ecommerceAction.action_type = '6') AS purchased_docs
@@ -76,7 +76,7 @@ customer_data AS(
   SELECT
     fv,
     channel_group,
-    COALESCE((SELECT AVG(avg_ticket) FROM UNNEST(ticket_array) AS avg_ticket), 0) AS avg_ticket
+    CAST(COALESCE((SELECT AVG(avg_ticket) FROM UNNEST(ticket_array) AS avg_ticket), 0) AS INT64) AS avg_ticket
   FROM(
     SELECT
       fullvisitorid AS fv,
@@ -92,11 +92,11 @@ customer_data AS(
 
 SELECT
   STRUCT(
-    search_term,
+    query AS search_term,
     COALESCE(channel_group, '') AS channel_group,
     COALESCE(CAST(avg_ticket AS INT64), 0) AS customer_avg_ticket
   ) AS search_keys,
   ARRAY_AGG(STRUCT(session_docs AS session)) AS judgment_keys
 FROM search_data LEFT JOIN customer_data USING(fv), UNNEST(hits)
 WHERE ARRAY_LENGTH(session_docs) BETWEEN 3 AND 500
-GROUP BY search_term, channel_group,avg_ticket
+GROUP BY query, channel_group, avg_ticket
