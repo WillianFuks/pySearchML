@@ -4,3 +4,4 @@ elasticsearch
 numpy
 requests
 kubernetes
+pytest

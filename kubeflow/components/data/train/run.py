@@ -27,19 +27,19 @@ training process. For information is available at:
 PATH = pathlib.Path(__file__).parent
 
 
-def build_judgment_files() -> None:
+def build_judgment_files(model_name: str) -> None:
     """
     Uses DBN Models and the clickstream data to come up with the Judgmnets inferences.
     """
     model = DBN.DBNModel()
 
-    clickstream_files_path = '/tmp/pysearchml/clickstream/'
+    clickstream_files_path = f'/tmp/pysearchml/{model_name}/clickstream/'
 
-    model_path = '/tmp/pysearchml/model/model.gz'
+    model_path = f'/tmp/pysearchml/{model_name}/model/model.gz'
     rmtree(os.path.dirname(model_path), ignore_errors=True)
     os.makedirs(os.path.dirname(model_path))
 
-    judgment_files_path = '/tmp/pysearchml/judgments/judgments.gz'
+    judgment_files_path = f'/tmp/pysearchml/{model_name}/judgments/judgments.gz'
     rmtree(os.path.dirname(judgment_files_path), ignore_errors=True)
     os.makedirs(os.path.dirname(judgment_files_path))
 
@@ -118,7 +118,8 @@ def build_train_file(
     model_name: str,
     es_batch: int,
     es_client: Elasticsearch,
-    destination: str
+    destination: str,
+    index: str
 ) -> None:
     """
     After the input file has been updated with judgment data, logs features from
@@ -146,7 +147,7 @@ def build_train_file(
     for search_keys, docs, judgments in read_judgment_files():
         judge_list.append(judgments)
 
-        search_arr.append(json.dumps({'index': 'pysearchml'}))
+        search_arr.append(json.dumps({'index': f'{index}'}))
         search_arr.append(json.dumps(get_logging_query(model_name, docs, search_keys)))
 
         if counter % es_batch == 0:
@@ -309,8 +310,10 @@ def download_data(args: NamedTuple):
             Follows format %Y%M%D, represents from where the query should start
             retrieving data from.
         train_end_date: str
+        model_name: str
+            Name to identify model being trained.
     """
-    path_to_download = '/tmp/pysearchml/clickstream'
+    path_to_download = f'/tmp/pysearchml/{args.model_name}/clickstream'
     rmtree(path_to_download, ignore_errors=True)
     os.makedirs(path_to_download, exist_ok=True)
 
@@ -380,8 +383,9 @@ def main(args: NamedTuple, es_client: Elasticsearch) -> None:
           Python Elasticsearch client
     """
     download_data(args)
-    build_judgment_files()
-    build_train_file(args.model_name, args.es_batch, es_client, args.destination)
+    build_judgment_files(args.model_name)
+    build_train_file(args.model_name, args.es_batch, es_client, args.destination,
+                     args.index)
 
 
 if __name__ == '__main__':
@@ -433,6 +437,13 @@ if __name__ == '__main__':
         type=str,
         help='Name of featureset store as saved in Elasticsearch.'
     )
+    parser.add_argument(
+        '--index',
+        dest='index',
+        type=str,
+        help='Name of index to use from in Elasticsearch.'
+    )
+
     args, _ = parser.parse_known_args(sys.argv[1:])
     es_client = Elasticsearch(hosts=[args.es_host])
     main(args, es_client)

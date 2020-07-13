@@ -1,0 +1,9 @@
+{
+    "query": {
+        "match": {
+            "field1": "{{test}}"
+        }
+    },
+    "params": ["test"],
+    "name": "test1"
+}
