@@ -88,7 +88,7 @@ steps:
     - export PYTHONPATH=.
     - pytest
   id: 'Unittest Data Train'
-  waitFor: ['Clone Git Repo']
+  waitFor: ['Clone Git Repo', 'Build Docker Images']
 
 # Unit Test Train Model
 - name: 'gcr.io/$PROJECT_ID/model'
@@ -96,7 +96,7 @@ steps:
     - export PYTHONPATH=.
     - pytest
   id: 'Unittest Train Model'
-  waitFor: ['Clone Git Repo']
+  waitFor: ['Clone Git Repo', 'Build Docker Images']
 
 # Compile Ranker Pipeline
 - name: 'gcr.io/$PROJECT_ID/pipelines'
