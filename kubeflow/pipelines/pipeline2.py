@@ -21,8 +21,8 @@ def build_pipeline(
     train_end_date='20160801',
     validation_init_date='20160802',
     validation_end_date='20160802',
-    test_init_date='20160802',
-    test_end_date='20160802',
+    test_init_date='20160803',
+    test_end_date='20160803',
     model_name='lambdamart0',
     ranker='lambdamart',
     index='pysearchml'
@@ -48,7 +48,7 @@ def build_pipeline(
             f'--bucket={bucket}/validation/regular',
             f'--validation_init_date={validation_init_date}',
             f'--validation_end_date={validation_end_date}',
-            '--destination=/data/pysearchml/{model_name}/validation_regular'
+            f'--destination=/data/pysearchml/{model_name}/validation_regular'
         ],
         pvolumes={'/data': pvc}
     ).set_display_name('Build Regular Validation Dataset').after(prepare_op)
@@ -60,7 +60,7 @@ def build_pipeline(
             f'--bucket={bucket}/validation/train',
             f'--validation_init_date={train_init_date}',
             f'--validation_end_date={train_end_date}',
-            '--destination=/data/pysearchml/{model_name}/validation_train'
+            f'--destination=/data/pysearchml/{model_name}/validation_train'
         ],
         pvolumes={'/data': pvc}
     ).set_display_name('Build Train Validation Dataset').after(prepare_op)
@@ -87,7 +87,7 @@ def build_pipeline(
             f'--train_end_date={train_end_date}',
             f'--es_host={es_host}',
             f'--model_name={model_name}',
-            '--destination=/data/pysearchml/{model_name}/train'
+            f'--destination=/data/pysearchml/{model_name}/train'
         ],
         pvolumes={'/data': pvc}
     ).set_display_name('Build Training Dataset').after(prepare_op)
@@ -101,11 +101,11 @@ def build_pipeline(
             f'--model_name={model_name}',
             f'--ranker={ranker}',
             '--name=pysearchml',
-            '--train_file_path=/data/pysearchml/{model_name}/train/train_dataset.txt',
-            '--validation_files_path=/data/pysearchml/{model_name}/validation_regular',
+            f'--train_file_path=/data/pysearchml/{model_name}/train/train_dataset.txt',
+            f'--validation_files_path=/data/pysearchml/{model_name}/validation_regular',
             ('--validation_train_files_path=/data/pysearchml/{model_name}/'
              'validation_train'),
-            '--destination=/data/pysearchml/{model_name}/'
+            f'--destination=/data/pysearchml/{model_name}/'
         ],
         pvolumes={'/data': pvc}
     ).set_display_name('Katib Optimization Process').after(
@@ -119,7 +119,7 @@ def build_pipeline(
         arguments=[
             f'--es_host={es_host}',
             f'--model_name={model_name}',
-            '--destination=/data/pysearchml/{model_name}/best_model.txt'
+            f'--destination=/data/pysearchml/{model_name}/best_model.txt'
         ],
         pvolumes={'/data': pvc}
     ).set_display_name('Post RankLib Model to ES').after(katib_op)
