@@ -20,11 +20,43 @@ def get_ranker_parameters(ranker: str) -> List[Dict[str, Any]]:
     return {
         'lambdamart': [
             {
-                "name": "--x",
+                "name": "--tree",
+                "parameterType": "int",
+                "feasibleSpace": {
+                    "min": "1",
+                    "max": "500"
+                }
+            },
+            {
+                "name": "--leaf",
+                "parameterType": "int",
+                "feasibleSpace": {
+                    "min": "2",
+                    "max": "40"
+                }
+            },
+            {
+                "name": "--shrinkage",
                 "parameterType": "double",
                 "feasibleSpace": {
                     "min": "0.01",
-                    "max": "3.03"
+                    "max": "0.2"
+                }
+            },
+            {
+                "name": "--tc",
+                "parameterType": "int",
+                "feasibleSpace": {
+                    "min": "-1",
+                    "max": "300"
+                }
+            },
+            {
+                "name": "--mls",
+                "parameterType": "int",
+                "feasibleSpace": {
+                    "min": "1",
+                    "max": "10"
                 }
             }
         ]
@@ -136,7 +168,6 @@ def main(argv=None):
     expected, _ = experiment.is_expected_conditions(current_exp, ["Succeeded"])
 
     print('THIS IS CURRENT_EXP: ', current_exp)
-    from glob import glob
 
     if expected:
         params = current_exp["status"]["currentOptimalTrial"]["parameterAssignments"]
@@ -144,15 +175,6 @@ def main(argv=None):
         os.makedirs(os.path.dirname(args.destination), exist_ok=True)
         if os.path.isfile(args.destination):
             os.remove(args.destination)
-
-        print(glob('/data/*'))
-        with open('test.txt', 'w') as f:
-            f.write('test')
-        from shutil import copyfile
-        copyfile('./test.txt', '/data/test.txt')
-        with open(args.destination, 'w') as f:
-            f.write(json.dumps(params))
-        print(open(args.destination).read())
 
 
 if __name__ == "__main__":

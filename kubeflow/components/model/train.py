@@ -46,7 +46,7 @@ def main(args: NamedTuple, X: Sequence[str]) -> None:
     cmd = ('java -jar ranklib/RankLib-2.14.jar -ranker '
            f'{ranker} -train {args.train_file_path} -norm sum -save '
            f'{args.destination}/model.txt '
-           f'{(" ".join(X)).replace("--", "-")} -metric2t ERR')
+           f'{(" ".join(X)).replace("--", "-").replace("=", " ")} -metric2t ERR')
 
     # {args.destination}/model.txt contains the specification of the
     # final trained model
@@ -135,7 +135,7 @@ def post_model_to_elasticsearch(es_host, model_name, model_path) -> None:
     """
     Exports trained model to Elasticsearch
     """
-    model_definition = open(f'{model_path}/model.txt').read()
+    model_definition = open(model_path).read()
     model_request = {
         'model': {
             'name': model_name,
@@ -215,4 +215,5 @@ if __name__ == '__main__':
         help='ES Index name to use.'
     )
     args, unknown = parser.parse_known_args(sys.argv[1:])
+    print('thi is unknown: ', unknown)
     main(args, unknown)
