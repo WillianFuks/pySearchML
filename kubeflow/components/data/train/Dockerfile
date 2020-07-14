@@ -8,4 +8,4 @@ ENV GOOGLE_APPLICATION_CREDENTIALS=key.json
 
 RUN pip install -r requirements.txt
 
-ENTRYPOINT ["python", "run.py"]
+ENTRYPOINT ["sh", "-c"]

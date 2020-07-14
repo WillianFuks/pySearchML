@@ -33,12 +33,19 @@ def build_judgment_files(model_name: str) -> None:
     """
     model = DBN.DBNModel()
 
+    # clickstream has the browsing patterns of searches, clicks and purchases from
+    # customers.
     clickstream_files_path = f'/tmp/pysearchml/{model_name}/clickstream/'
 
+    # model is the output from pyClickModels. It contains JSON NEWLINE DELIMITED data
+    # where each row contains a JSON with search queries and its context and then
+    # a dictionary of skus and their correspondent judgment for the respective query.
     model_path = f'/tmp/pysearchml/{model_name}/model/model.gz'
+
     rmtree(os.path.dirname(model_path), ignore_errors=True)
     os.makedirs(os.path.dirname(model_path))
 
+    # finally judgment files is where the final judgments are written.
     judgment_files_path = f'/tmp/pysearchml/{model_name}/judgments/judgments.gz'
     rmtree(os.path.dirname(judgment_files_path), ignore_errors=True)
     os.makedirs(os.path.dirname(judgment_files_path))
@@ -53,7 +60,7 @@ def build_judgment_files(model_name: str) -> None:
 
             # search_keys is something like:
             # {"search_term:query|brand:brand_name|context:value}
-            # Notice thatonly the `search_term` is always available. Other keys depends
+            # Notice that only the `search_term` is always available. Other keys depends
             # on the chosen context when training the model, i.e., one can choose to
             # add the brand information or not and so on.
             search_keys = list(row.keys())[0]
@@ -144,7 +151,7 @@ def build_train_file(
     if os.path.isfile(f'{destination}/train_dataset.txt'):
         os.remove(f'{destination}/train_dataset.txt')
 
-    for search_keys, docs, judgments in read_judgment_files():
+    for search_keys, docs, judgments in read_judgment_files(model_name):
         judge_list.append(judgments)
 
         search_arr.append(json.dumps({'index': f'{index}'}))
@@ -283,11 +290,13 @@ def get_logging_query(
     return log_query
 
 
-def read_judgment_files() -> Iterator[Tuple[Dict[str, Any], List[str], List[str]]]:
+def read_judgment_files(
+    model_name: str
+) -> Iterator[Tuple[Dict[str, Any], List[str], List[str]]]:
     """
     Reads resulting files of the judgments updating process.
     """
-    files = glob.glob('/tmp/pysearchml/judgments/*.gz')
+    files = glob.glob(f'/tmp/pysearchml/{model_name}/judgments/*.gz')
     for file_ in files:
         for row in gzip.GzipFile(file_):
             row = json.loads(row)

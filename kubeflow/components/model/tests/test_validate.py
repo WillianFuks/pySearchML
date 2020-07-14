@@ -5,8 +5,6 @@ from validate import validate_model
 
 
 def test_validate_model(monkeypatch, es_response):
-    print('this is es_response: ', es_response)
-    1 / 0
     es_mock = mock.Mock()
     es_mock.return_value.msearch.side_effect = es_response
     monkeypatch.setattr('validate.Elasticsearch', es_mock)

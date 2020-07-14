@@ -214,8 +214,5 @@ if __name__ == '__main__':
         type=str,
         help='ES Index name to use.'
     )
-
-    print(sys.argv[1:])
     args, unknown = parser.parse_known_args(sys.argv[1:])
-    print('this is uknown: ', unknown)
     main(args, unknown)

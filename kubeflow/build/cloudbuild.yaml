@@ -82,6 +82,22 @@ steps:
   id: 'Build Docker Images'
   waitFor: ['Clone Git Repo']
 
+# Unit Test Data Train
+- name: 'gcr.io/$PROJECT_ID/data_train'
+  args:
+    - export PYTHONPATH=.
+    - pytest
+  id: 'Unittest Data Train'
+  waitFor: ['Clone Git Repo']
+
+# Unit Test Train Model
+- name: 'gcr.io/$PROJECT_ID/model'
+  args:
+    - export PYTHONPATH=.
+    - pytest
+  id: 'Unittest Train Model'
+  waitFor: ['Clone Git Repo']
+
 # Compile Ranker Pipeline
 - name: 'gcr.io/$PROJECT_ID/pipelines'
   args:
@@ -93,12 +109,6 @@ steps:
     - 'PROJECT_ID=$PROJECT_ID'
   id: 'Compile Pipeline'
   waitFor: ['Clone Git Repo']
-
-# Upload Pipeline tar.gz to GCS
-#- name: 'gcr.io/cloud-builders/gsutil'
-  #args: ['cp', '${_RANKER}_pipeline.tar.gz', 'gs://${_BUCKET_NAME}/${_RANKER}_pipeline/']
-  #dir: 'pySearchML/kubeflow/pipelines'
-#  id:   'Upload Ranker Pipeline to GCS'
 
 # Get Host After Cluster Is Created
 - name: 'gcr.io/cloud-builders/gcloud'

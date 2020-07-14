@@ -5,3 +5,4 @@ numpy
 requests
 kubernetes
 pytest
+mock

@@ -5,3 +5,5 @@ Cython
 pyClickModels
 numpy
 requests
+pytest
+mock
