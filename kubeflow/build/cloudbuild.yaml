@@ -103,7 +103,7 @@ steps:
   args:
     - '-c'
     - |
-      dsl-compile --py pipeline.py --output pipeline.tar.gz
+      dsl-compile --py pipeline2.py --output pipeline.tar.gz
   dir: 'pySearchML/kubeflow/pipelines'
   env:
     - 'PROJECT_ID=$PROJECT_ID'
