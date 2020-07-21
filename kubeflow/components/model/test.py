@@ -41,6 +41,8 @@ def parse_args(args: List) -> NamedTuple:
         help='Determines how many items to send at once to Elasticsearch when using '
              'multisearch API.'
     )
+    args, _ = parser.parse_known_args(args)
+    return args
 
 
 if __name__ == '__main__':

@@ -87,6 +87,7 @@ def build_pipeline(
             f'--train_end_date={train_end_date}',
             f'--es_host={es_host}',
             f'--model_name={model_name}',
+            f'--index={index}',
             f'--destination=/data/pysearchml/{model_name}/train'
         ],
         pvolumes={'/data': pvc}

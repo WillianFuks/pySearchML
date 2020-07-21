@@ -118,7 +118,7 @@ def write_results(X: Sequence[str], rank_train: float, rank_val: float,
     else:
         with open(str(best_rank_file), 'w') as f:
             f.write(str(rank_val))
-            copyfile(f'{destination}/model.txt', str(best_model_file))
+        copyfile(f'{destination}/model.txt', str(best_model_file))
 
 
 def get_partiated_validator(

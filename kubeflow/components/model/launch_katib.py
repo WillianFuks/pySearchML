@@ -130,6 +130,11 @@ def main(argv=None):
 
     args = parser.parse_args()
 
+    files = [f'{args.destination}/best_rank.txt', f'{args.destination}/best_model.txt']
+    for file_ in files:
+        if os.path.isfile(file_):
+            os.remove(file_)
+
     exp_json_file = PATH / 'experiment.json'
     exp_def = json.loads(open(str(exp_json_file)).read())
 
@@ -155,26 +160,29 @@ def main(argv=None):
 
     exp_def['spec']['parameters'] = get_ranker_parameters(args.ranker)
     exp_def['metadata']['name'] = exp_name
-
     print('this is exp_def: ', json.dumps(exp_def))
 
     create_response = experiment.create(exp_def)
-
     print('create response: ', create_response)
 
     expected_conditions = ["Succeeded", "Failed"]
     current_exp = experiment.wait_for_condition('kubeflow', exp_name,
                                                 expected_conditions)
+    print('current_exp: ', json.dumps(current_exp))
+
     expected, _ = experiment.is_expected_conditions(current_exp, ["Succeeded"])
 
-    print('THIS IS CURRENT_EXP: ', current_exp)
-
     if expected:
+        best_rank = current_exp["status"]["currentOptimalTrial"]["observation"][
+            'metrics'][0]['value']
+        print('Best Rank Found: ', best_rank)
         params = current_exp["status"]["currentOptimalTrial"]["parameterAssignments"]
         print(json.dumps(params))
         os.makedirs(os.path.dirname(args.destination), exist_ok=True)
         if os.path.isfile(args.destination):
             os.remove(args.destination)
+
+    experiment.delete(exp_name, 'kubeflow')
 
 
 if __name__ == "__main__":

@@ -111,12 +111,12 @@ class K8sCR(object):
       print("Deleteing %s/%s %s in namespace %s." %(
         self.group, self.plural, name, namespace))
       api_response = self.client.delete_namespaced_custom_object(
-        self.group,
-        self.version,
-        namespace,
-        self.plural,
-        name,
-        body)
+        group=self.group,
+        version=self.version,
+        namespace=namespace,
+        plural=self.plural,
+        name=name,
+        body=body)
       print("Deleted %s/%s %s in namespace %s." %(
         self.group, self.plural, name, namespace))
       return api_response

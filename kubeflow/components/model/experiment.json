@@ -10,7 +10,7 @@
   },
   "spec": {
     "objective": {
-      "type": "maximize",
+      "type": "minimize",
       "objectiveMetricName": "Validation-rank",
       "additionalMetricNames": [
         "rank"

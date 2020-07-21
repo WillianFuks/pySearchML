@@ -26,4 +26,4 @@ if __name__ == '__main__':
     )
     args, _ = parser.parse_known_args(sys.argv[1:])
     post_model_to_elasticsearch(args.es_host, args.model_name,
-                                f'{args.destination}/model.txt')
+                                f'{args.destination}')
