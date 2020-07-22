@@ -1,0 +1,18 @@
+name: Prepare Environment
+description: Runs queries against GA and export result to an Elasticsearch cluster index
+
+inputs:
+  - {name: force_restart, type: Bool, description: 'If `True` then deletes index and build it again.'}
+  - {name: es_host, type: String, description: 'Host where Elasticsearch is located.'}
+  - {name: bucket, type: String}
+  - {name: model_name, type: String, description: 'Name of model being experimented on Kubeflow. Each new experiment can have a proper name in order to discriminate between models approaches.'}
+
+implementation:
+  container:
+    image: gcr.io/{PROJECT_ID}/prepare_env
+    args: [
+      --force_restart, {inputValue: force_restart},
+      --es_host, {inputValue: es_host},
+      --bucket, {inputValue: bucket},
+      --model_name, {inputValue: model_name},
+    ]

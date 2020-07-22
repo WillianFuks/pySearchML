@@ -1,0 +1,55 @@
+{
+    "query": {
+        "function_score": {
+            "query": {
+                "bool": {
+                    "must": {
+                        "bool": {
+                            "minimum_should_match": 1,
+                            "should": [
+                                {
+                                    "multi_match": {
+                                        "operator": "and",
+                                        "query": "{query}",
+                                        "type": "cross_fields",
+                                        "fields": [
+                                            "sku",
+                                            "name",
+                                            "category"
+                                        ]
+                                    }
+                                }
+                            ]
+                        }
+                    }
+                }
+            },
+            "functions": [
+                {
+                    "field_value_factor": {
+                        "field": "performances.global.CTR",
+                        "factor": 10,
+                        "missing": 0,
+                        "modifier": "none"
+                    }
+                }
+            ],
+            "boost_mode": "sum",
+            "score_mode": "sum"
+        }
+    },
+    "rescore": {
+        "window_size": "{window_size}",
+        "query": {
+            "rescore_query": {
+                "sltr": {
+                    "params": "{search_keys}",
+                    "model": "{model_name}"
+                }
+            },
+            "rescore_query_weight": 20,
+            "query_weight": 0.1,
+            "score_mode": "total"
+        }
+    }
+}

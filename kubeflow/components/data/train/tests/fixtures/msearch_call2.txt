@@ -1,0 +1,2 @@
+{"index": "test"}
+{"query": {"bool": {"filter": [{"terms": {"_id": ["doc0"]}}], "should": [{"sltr": {"_name": "logged_featureset", "featureset": "model_name_test", "params": {"search_term": "keyword2"}}}]}}, "_source": ["_id"], "ext": {"ltr_log": {"log_specs": {"name": "main", "named_query": "logged_featureset"}}}}

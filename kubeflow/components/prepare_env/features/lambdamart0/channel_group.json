@@ -1,0 +1,19 @@
+{
+    "query": {
+        "function_score": {
+            "query": {
+                "match_all": {}
+            },
+            "script_score" : {
+                "script" : {
+                    "params": {
+                        "channel_group": "{{channel_group}}"
+                    },
+                    "source": "if (params.channel_group == 'paid_search') { return doc['performances.channel.paid_search.CTR'].value * 10 } else if (params.channel_group == 'referral') { return doc['performances.channel.referral.CTR'].value * 10 } else if (params.channel_group == 'organic_search') { return doc['performances.channel.organic_search.CTR'].value * 10 } else if (params.channel_group == 'social') { return doc['performances.channel.social.CTR'].value * 10 } else if (params.channel_group == 'display') { return doc['performances.channel.display.CTR'].value * 10 } else if (params.channel_group == 'direct') { return doc['performances.channel.direct.CTR'].value * 10 } else if (params.channel_group == 'affiliates') { return doc['performances.channel.affiliates.CTR'].value * 10 }"
+                }
+            }
+        }
+    },
+    "params": ["channel_group"],
+    "name": "channel_group"
+}

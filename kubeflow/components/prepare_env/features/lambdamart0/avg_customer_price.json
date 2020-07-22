@@ -1,0 +1,19 @@
+{
+    "query": {
+        "function_score": {
+            "query": {
+                "match_all": {}
+            },
+            "script_score" : {
+                "script" : {
+                    "params": {
+                        "customer_avg_ticket": "{{customer_avg_ticket}}"
+                    },
+                    "source": "return Math.log(1 + Math.abs(doc['price'].value - Float.parseFloat(params.customer_avg_ticket)))"
+                }
+            }
+        }
+    },
+    "params": ["customer_avg_ticket"],
+    "name": "customer_avg_ticket"
+}

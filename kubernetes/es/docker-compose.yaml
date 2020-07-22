@@ -1,0 +1,16 @@
+version: '3'
+
+services:
+  es:
+    build:
+      context: ./
+      dockerfile: Dockerfile
+    ports:
+      - "9200:9200"
+    tty: true
+    environment:
+      - discovery.type=single-node
+    ulimits:
+      memlock:
+        soft: -1
+        hard: -1

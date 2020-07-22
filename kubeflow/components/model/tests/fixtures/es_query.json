@@ -1,0 +1,12 @@
+{
+  "query": "test",
+  "rescore": {
+    "query": {
+      "rescore_query": {
+        "sltr": {
+          "params": {}
+        }
+      }
+    }
+  }
+}

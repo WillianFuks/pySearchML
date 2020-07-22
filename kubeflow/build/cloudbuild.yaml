@@ -1,0 +1,139 @@
+steps:
+
+# Transfer secret keys from GCP to Cloud Build environemnt
+- name: gcr.io/cloud-builders/gcloud
+  entrypoint: 'bash'
+  args:
+    - '-c'
+    - |
+      gcloud secrets versions access latest --secret=pysearchml-git-secret > /root/.ssh/id_github
+      gcloud secrets versions access latest --secret=pysearchml-service-account > key.json
+  volumes:
+  - name: 'ssh'
+    path: /root/.ssh
+  id: 'Get Secret Keys'
+
+# Update known_hosts
+- name: 'gcr.io/cloud-builders/git'
+  entrypoint: 'bash'
+  args:
+  - '-c'
+  - |
+    chmod 600 /root/.ssh/id_github
+    ssh-keyscan -t rsa github.com >> /root/.ssh/known_hosts
+    cat <<EOF >/root/.ssh/config
+    Hostname github.com
+    IdentityFile /root/.ssh/id_github
+    EOF
+  volumes:
+  - name: 'ssh'
+    path: /root/.ssh
+  id: 'Prepare Git known_hosts'
+
+# Clones Repository And Copies Service Account Key
+- name: 'gcr.io/cloud-builders/git'
+  entrypoint: 'bash'
+  args:
+  - '-c'
+  - |
+    git clone git@github.com:WillianFuks/pySearchML.git
+    cp key.json pySearchML/
+    cd pySearchML
+    git checkout prepare_k8
+  volumes:
+  - name: 'ssh'
+    path: /root/.ssh
+  id: 'Clone Git Repo'
+
+# Build KFP Cluster
+- name: 'gcr.io/cloud-builders/gcloud'
+  entrypoint: 'bash'
+  args:
+    - '-c'
+    - |
+      ./bin/create_k8s.sh
+  dir: 'pySearchML'
+  env:
+    - 'PROJECT_ID=$PROJECT_ID'
+    - 'CLUSTER_NAME=${_CLUSTER_NAME}'
+    - 'COMPUTE_ZONE=${_COMPUTE_ZONE}'
+  id: 'Build KFP Cluster'
+  volumes:
+  - name: 'ssh'
+    path: /root/.ssh
+
+# Build Docker Images
+- name: 'gcr.io/cloud-builders/docker'
+  entrypoint: 'bash'
+  args:
+    - '-c'
+    - |
+      docker build -t gcr.io/$PROJECT_ID/prepare_env -f kubeflow/components/prepare_env/Dockerfile .
+      docker build -t gcr.io/$PROJECT_ID/pipelines -f kubeflow/pipelines/Dockerfile .
+      docker build -t gcr.io/$PROJECT_ID/data_validation -f kubeflow/components/data/validation/Dockerfile .
+      docker build -t gcr.io/$PROJECT_ID/data_train -f kubeflow/components/data/train/Dockerfile .
+      docker build -t gcr.io/$PROJECT_ID/model -f kubeflow/components/model/Dockerfile . --build-arg PROJECT_ID=$PROJECT_ID
+      docker push gcr.io/$PROJECT_ID/prepare_env
+      docker push gcr.io/$PROJECT_ID/pipelines
+      docker push gcr.io/$PROJECT_ID/data_validation
+      docker push gcr.io/$PROJECT_ID/data_train
+      docker push gcr.io/$PROJECT_ID/model
+  dir: 'pySearchML'
+  id: 'Build Docker Images'
+  waitFor: ['Clone Git Repo']
+
+# Unit Test Data Train
+- name: 'gcr.io/$PROJECT_ID/data_train'
+  args:
+    - export PYTHONPATH=.
+    - pytest
+  id: 'Unittest Data Train'
+  waitFor: ['Clone Git Repo', 'Build Docker Images']
+
+# Unit Test Train Model
+- name: 'gcr.io/$PROJECT_ID/model'
+  args:
+    - export PYTHONPATH=.
+    - pytest
+  id: 'Unittest Train Model'
+  waitFor: ['Clone Git Repo', 'Build Docker Images']
+
+# Compile Ranker Pipeline
+- name: 'gcr.io/$PROJECT_ID/pipelines'
+  args:
+    - '-c'
+    - |
+      dsl-compile --py pipeline2.py --output pipeline.tar.gz
+  dir: 'pySearchML/kubeflow/pipelines'
+  env:
+    - 'PROJECT_ID=$PROJECT_ID'
+  id: 'Compile Pipeline'
+  waitFor: ['Clone Git Repo']
+
+# Get Host After Cluster Is Created
+- name: 'gcr.io/cloud-builders/gcloud'
+  entrypoint: 'bash'
+  args:
+    - '-c'
+    - |
+      gcloud components install kubectl
+      gcloud container clusters get-credentials ${_CLUSTER_NAME}
+      ./pySearchML/bin/get_pipe_host.sh
+      echo AAAAAAAAAAAAAAAAAAAND $(cat k8_host.txt)
+  id: 'Get Host'
+  waitFor: ['Build KFP Cluster']
+
+# Deploy Pipeline to K8
+- name: 'gcr.io/$PROJECT_ID/pipelines'
+  args:
+    - '-c'
+    - |
+      gcloud components install kubectl
+      gcloud container clusters get-credentials pysearchml --zone=$_COMPUTE_ZONE
+      kubectl port-forward -n kubeflow svc/ml-pipeline-ui 7067:80 &
+      # Wait port-forwarding to take its place
+      sleep 60s
+      python helper.py deploy-pipeline --host=$(cat /workspace/k8_host.txt) --version=${_VERSION}
+  dir: 'pySearchML/kubeflow/pipelines/'
+  id:  'Deploy Pipeline'
+  waitFor: ['Compile Pipeline', 'Build KFP Cluster', 'Get Host']

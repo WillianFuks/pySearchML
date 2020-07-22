@@ -1,0 +1,102 @@
+{
+    "index": "pysearchml",
+    "body": {
+        "mappings": {
+            "dynamic": "strict",
+            "properties": {
+                "sku": {
+                    "type": "keyword"
+                },
+                "name": {
+                    "type": "text"
+                },
+                "category": {
+                    "type": "text"
+                },
+                "price": {
+                    "type": "float"
+                },
+                "performances": {
+                    "type": "object",
+                    "properties": {
+                        "global": {
+                            "type": "object",
+                            "properties": {
+                                "impressions": {
+                                    "type": "integer"
+                                },
+                                "clicks": {
+                                    "type": "integer"
+                                },
+                                "CTR": {
+                                    "type": "float"
+                                }
+                            }
+                        },
+                        "channel": {
+                            "type": "object",
+                            "properties": {
+                                "organic_search": {
+                                    "type": "object",
+                                    "properties": {
+                                        "CTR": {
+                                            "type": "float"
+                                        }
+                                    }
+                                },
+                                "direct": {
+                                    "type": "object",
+                                    "properties": {
+                                        "CTR": {
+                                            "type": "float"
+                                        }
+                                    }
+                                },
+                                "referral": {
+                                    "type": "object",
+                                    "properties": {
+                                        "CTR": {
+                                            "type": "float"
+                                        }
+                                    }
+                                },
+                                "paid_search": {
+                                    "type": "object",
+                                    "properties": {
+                                        "CTR": {
+                                            "type": "float"
+                                        }
+                                    }
+                                },
+                                "display": {
+                                    "type": "object",
+                                    "properties": {
+                                        "CTR": {
+                                            "type": "float"
+                                        }
+                                    }
+                                },
+                                "affiliates": {
+                                    "type": "object",
+                                    "properties": {
+                                        "CTR": {
+                                            "type": "float"
+                                        }
+                                    }
+                                },
+                                "social": {
+                                    "type": "object",
+                                    "properties": {
+                                        "CTR": {
+                                            "type": "float"
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+}

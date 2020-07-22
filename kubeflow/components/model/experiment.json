@@ -1,0 +1,71 @@
+{
+  "apiVersion": "kubeflow.org/v1alpha3",
+  "kind": "Experiment",
+  "metadata": {
+    "namespace": "kubeflow",
+    "name": "",
+    "labels": {
+      "controller-tools.k8s.io": "1.0"
+    }
+  },
+  "spec": {
+    "objective": {
+      "type": "minimize",
+      "objectiveMetricName": "Validation-rank",
+      "additionalMetricNames": [
+        "rank"
+      ]
+    },
+    "algorithm": {
+      "algorithmName": "bayesianoptimization"
+    },
+    "parallelTrialCount": 1,
+    "maxTrialCount": 2,
+    "maxFailedTrialCount": 1,
+    "parameters": [],
+    "trialTemplate": {
+      "goTemplate": {
+        "rawTemplate": {
+          "apiVersion": "batch/v1",
+          "kind": "Job",
+          "metadata":{
+            "name": "{{.Trial}}",
+            "namespace": "{{.NameSpace}}"
+          },
+          "spec": {
+            "template": {
+              "spec": {
+                "restartPolicy": "Never",
+                "containers": [
+                  {
+                    "name": "{{.Trial}}",
+                    "image": "gcr.io/{PROJECT_ID}/model",
+                    "command": [
+                      "python /model/train.py --train_file_path={train_file_path} --validation_files_path={validation_files_path} --validation_train_files_path={validation_train_files_path} --es_host={es_host} --destination={destination} --model_name={model_name} --ranker={ranker} {{- with .HyperParameters}} {{- range .}} {{.Name}}={{.Value}} {{- end}} {{- end}}"
+                    ],
+                    "volumeMounts": [
+                      {
+                        "mountPath": "/data",
+                        "name": "pysearchmlpvc",
+                        "readOnly": false
+                      }
+                    ]
+                  }
+                ],
+                "volumes": [
+                  {
+                    "name": "pysearchmlpvc",
+                    "persistentVolumeClaim": {
+                      "claimName": "pysearchml-nfs",
+                      "readOnly": false
+                    }
+                  }
+                ]
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}
