@@ -38,8 +38,6 @@ steps:
   - |
     git clone git@github.com:WillianFuks/pySearchML.git
     cp key.json pySearchML/
-    cd pySearchML
-    git checkout prepare_k8
   volumes:
   - name: 'ssh'
     path: /root/.ssh
@@ -119,7 +117,6 @@ steps:
       gcloud components install kubectl
       gcloud container clusters get-credentials ${_CLUSTER_NAME}
       ./pySearchML/bin/get_pipe_host.sh
-      echo AAAAAAAAAAAAAAAAAAAND $(cat k8_host.txt)
   id: 'Get Host'
   waitFor: ['Build KFP Cluster']
 

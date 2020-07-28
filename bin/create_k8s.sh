@@ -2,6 +2,7 @@
 
 CLUSTER_EXISTS=true
 CLUSTER_NAME=${CLUSTER_NAME:-"pysearchml"}
+
 echo "cluster name: ${CLUSTER_NAME}"
 
 gcloud config set project $PROJECT_ID 2>/dev/null
@@ -55,4 +56,7 @@ if [ $CLUSTER_EXISTS = false ]; then
 
     # https://www.digitalocean.com/community/tutorials/how-to-set-up-an-elasticsearch-fluentd-and-kibana-efk-logging-stack-on-kubernetes#step-3-%E2%80%94-creating-the-kibana-deployment-and-service
     kubectl apply -f kubernetes/es/deploy_elasticsearch.yaml
+
+    # Install the visualizer front end
+    kubectl apply -f kubernetes/front/app.yaml
 fi

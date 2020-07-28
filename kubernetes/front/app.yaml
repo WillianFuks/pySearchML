@@ -1,25 +1,49 @@
+kind: Namespace
+apiVersion: v1
+metadata:
+  name: front
+
+---
+kind: Service
+apiVersion: v1
+metadata:
+  name: front
+  namespace: front
+  labels:
+    app: front
+spec:
+  selector:
+    app: front
+  clusterIP: None
+  ports:
+    - port: 8088
+      targetPort: 8088
+
+---
 apiVersion: apps/v1beta2
 kind: Deployment
 metadata:
-  name: flask
+  name: front
+  namespace: front
   labels:
-    name: flask
+    app: front
 spec:
   replicas: 1
   selector:
     matchLabels:
-      name: flask
+      app: front
   template:
     metadata:
-      name: flask
+      name: front
+      namespace: front
       labels:
-        name: flask
+        app: front
     spec:
       containers:
-        - name: flask
-          image: gcr.io/pysearchml/flask-app:v1
+        - name: front
+          image: willfuks/pysearchml_front
           ports:
-            - containerPort: 8080
+            - containerPort: 8088
           resources:
             requests:
               memory: 256Mi

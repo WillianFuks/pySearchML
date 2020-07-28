@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html>
+<body>
+
+<h1>Visualizer</h1>
+
+<form action="searchresults" method="post">
+    Input Query:<br>
+    <input type="text" name="search_term">
+    <br>
+    Items to Return:<br>
+    <input type="number" name="size" value="30"/>
+    <br>
+    Model Name:<br>
+    <input type="text" name="model_name" value="lambdamart0">
+    <br>
+    Channel Group:<br>
+    <input type="text" name="channel_group" value="paid_search">
+    <br>
+    Customer Avg Ticket:<br>
+    <input type="number" step="0.01" name="customer_avg_ticket" value="20"/>
+    <br>
+    <input type="checkbox" name="ltr_flag" value="True" checked>
+    <label for="ltr_flag"> Use LTR</label>
+    <br>
+    <br>
+    <input type="submit" value="Submit">
+</form>
+
+</body>
+</html>

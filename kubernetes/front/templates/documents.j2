@@ -1,0 +1,38 @@
+{% macro build_product(id, score) %}
+    <div id="{{ id }}" class=" product-box">
+        <div class="product-box-detail">
+            <p style="white-space: nowrap; overflow: hidden; text-overflow: ellipsis" class="product-box-title hide-mobile">{{ id }}</p>
+        </div>
+        <div class="product-box-score">
+            <span class="product-box-score">Score: {{ score }}</span>
+        </div>
+    </div>
+{% endmacro %}
+
+<style>
+    .products-container {
+        max-width: 960px;
+        width: 100%;
+        margin: 0 auto;
+        margin-top: 20px;
+    }
+
+    .product-box {
+        float: left;
+        width: 100%;
+        margin-right: 20%
+    }
+
+    .products-container .product-box {
+        width: 12%;
+    }
+</style>
+
+<div class="products-container">
+{% for product in product_list %}
+    {{ build_product(
+    	product['_id'],
+        product['_score'],
+    ) }}
+{% endfor %}
+</div>
