@@ -1,4 +1,4 @@
-FROM python:3.7.7-alpine3.12 as python
+FROM python:3.7.7-slim as python
 
 COPY kubeflow/components/prepare_env /prepare_env
 WORKDIR /prepare_env

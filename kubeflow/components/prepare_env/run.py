@@ -71,7 +71,7 @@ def create_feature_set(es_host: str, model_name: str) -> None:
       model_name: str
           Name that specificies current experiment in Kubeflow.
     """
-    features_path = PATH / 'features' / f'{model_name}'
+    features_path = PATH / f'{model_name}' / 'features'
     feature_set = {
         'featureset': {
             'name': model_name,
@@ -114,7 +114,7 @@ def main(args: NamedTuple):
     from elasticsearch.helpers import bulk
 
     es = Elasticsearch(hosts=[args.es_host])
-    es_mapping_path = PATH / 'es_mapping.json'
+    es_mapping_path = PATH / f'{args.model_name}' / 'es_mapping.json'
     schema = json.loads(open(str(es_mapping_path)).read())
     index = schema.pop('index')
 
@@ -133,8 +133,9 @@ def main(args: NamedTuple):
             bucket_obj.create()
 
         # Query GA data
-        query_path = PATH / 'ga_data.sql'
+        query_path = PATH / f'{args.model_name}' / 'ga_data.sql'
         query = open(str(query_path)).read()
+        print(query)
         job_config = bigquery.QueryJobConfig()
         job_config.destination = f'{bq_client.project}.pysearchml.{table_id}'
         job_config.maximum_bytes_billed = 10 * (1024 ** 3)

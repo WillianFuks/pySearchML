@@ -44,7 +44,7 @@ FROM(
         FROM UNNEST(hits), UNNEST(product)
         GROUP BY channel, sku, category, name
       ) AS products
-    FROM `bigquery-public-data.google_analytics_sample.ga_sessions_*`
+    FROM `bigquery-public-data.google_analytics_sample.ga_sessions*`
     WHERE TRUE
       AND REGEXP_EXTRACT(_TABLE_SUFFIX, r'.*_(\d+)$') BETWEEN '20160801' AND '20170801'
   ), UNNEST(products)

@@ -5,7 +5,7 @@ from jinja2 import Environment, FileSystemLoader
 from elasticsearch import Elasticsearch
 
 
-es = Elasticsearch('localhost:9200')
+es = Elasticsearch('elasticsearch.elastic-system.svc.cluster.local:9200')
 app = Flask(__name__)
 env = Environment(loader=FileSystemLoader('/front/templates'))
 

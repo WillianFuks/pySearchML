@@ -19,8 +19,8 @@
     "algorithm": {
       "algorithmName": "bayesianoptimization"
     },
-    "parallelTrialCount": 1,
-    "maxTrialCount": 2,
+    "parallelTrialCount": 2,
+    "maxTrialCount": 6,
     "maxFailedTrialCount": 1,
     "parameters": [],
     "trialTemplate": {
