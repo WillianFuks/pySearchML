@@ -1,5 +1,5 @@
 FROM google/cloud-sdk:alpine as gcloud
-FROM python:3.7.7-alpine3.12 as python
+FROM python:3.7.7-slim as python
 
 COPY ./key.json /key.json
 
